@@ -6747,12 +6747,18 @@ namespace sol {
 		/// one.
 		///
 		/// \group emplace
-		template <class... Args>
-		T& emplace(Args&&... args) noexcept {
-			static_assert(std::is_constructible<T, Args&&...>::value, "T must be constructible with Args");
-
+		///
+		/// Note: this is the optional<T&> (reference) specialization. Its
+		/// storage is a plain pointer, so emplace() simply rebinds the
+		/// reference. The previous implementation called this->construct(),
+		/// which only exists for the value specialization, and also failed to
+		/// return a value - it just happened to never be instantiated on most
+		/// toolchains. (SatDump iOS port fix.)
+		template <class U = T>
+		T& emplace(U&& u) noexcept {
 			*this = nullopt;
-			this->construct(std::forward<Args>(args)...);
+			m_value = std::addressof(u);
+			return *m_value;
 		}
 
 		/// Swaps this optional with the other.
