@@ -85,7 +85,7 @@ static void funcEndFrame()
 
         id<MTLRenderCommandEncoder> encoder =
             [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-        ImGuiMetal_RenderDrawData(ImGui::GetDrawData(), encoder);
+        ImGuiMetal_RenderDrawData(ImGui::GetDrawData(), commandBuffer, encoder);
         [encoder endEncoding];
 
         id<CAMetalDrawable> drawable = g_metalView.currentDrawable;

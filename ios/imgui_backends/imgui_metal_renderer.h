@@ -35,8 +35,9 @@ extern "C"
     // texture exists.
     void ImGuiMetal_NewFrame(void);
 
-    // Records the ImGui draw data into the given render command encoder.
+    // Records the ImGui draw data into the given command buffer/encoder pair.
     void ImGuiMetal_RenderDrawData(struct ImDrawData *drawData,
+                                   id<MTLCommandBuffer> commandBuffer,
                                    id<MTLRenderCommandEncoder> encoder);
 
     // Rebuilds the Dear ImGui font atlas texture (used by backend::rebuildFonts).

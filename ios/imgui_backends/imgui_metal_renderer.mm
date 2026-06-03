@@ -17,6 +17,7 @@ static id<MTLDevice> g_device = nil;
 static id<MTLRenderPipelineState> g_pipelineState = nil;
 static id<MTLSamplerState> g_samplerState = nil;
 static MTLPixelFormat g_colorPixelFormat = MTLPixelFormatBGRA8Unorm;
+static NSMutableArray<id<MTLBuffer>> *g_bufferCache = nil;
 
 // Texture registry. SatDump references textures by integer handle.
 static NSMutableDictionary<NSNumber *, id<MTLTexture>> *g_textures = nil;
@@ -114,6 +115,41 @@ void ImGuiMetal_RemoveTexture(unsigned int texId)
 }
 
 // ----------------------------------------------------------------------------
+// Reusable frame buffers
+// ----------------------------------------------------------------------------
+
+static id<MTLBuffer> ImGuiMetal_DequeueBuffer(NSUInteger length)
+{
+    @synchronized(g_bufferCache)
+    {
+        for (NSUInteger i = 0; i < g_bufferCache.count; i++)
+        {
+            id<MTLBuffer> buffer = g_bufferCache[i];
+            if (buffer.length >= length)
+            {
+                [g_bufferCache removeObjectAtIndex:i];
+                return buffer;
+            }
+        }
+    }
+
+    return [g_device newBufferWithLength:length options:MTLResourceStorageModeShared];
+}
+
+static void ImGuiMetal_ReturnBuffer(id<MTLBuffer> buffer)
+{
+    if (buffer == nil)
+        return;
+
+    @synchronized(g_bufferCache)
+    {
+        [g_bufferCache addObject:buffer];
+        while (g_bufferCache.count > 16)
+            [g_bufferCache removeObjectAtIndex:0];
+    }
+}
+
+// ----------------------------------------------------------------------------
 // Font atlas texture
 // ----------------------------------------------------------------------------
 
@@ -161,6 +197,7 @@ bool ImGuiMetal_Init(id<MTLDevice> device, MTLPixelFormat colorPixelFormat)
     g_device = device;
     g_colorPixelFormat = colorPixelFormat;
     g_textures = [NSMutableDictionary dictionary];
+    g_bufferCache = [NSMutableArray array];
 
     ImGuiIO &io = ImGui::GetIO();
     io.BackendRendererName = "imgui_impl_metal_satdump";
@@ -234,6 +271,7 @@ void ImGuiMetal_Shutdown(void)
     g_pipelineState = nil;
     g_samplerState = nil;
     g_textures = nil;
+    g_bufferCache = nil;
     g_device = nil;
     g_fontTextureId = 0;
     g_nextTextureId = 1;
@@ -250,9 +288,11 @@ void ImGuiMetal_NewFrame(void)
 // Draw data rendering
 // ----------------------------------------------------------------------------
 
-void ImGuiMetal_RenderDrawData(ImDrawData *drawData, id<MTLRenderCommandEncoder> encoder)
+void ImGuiMetal_RenderDrawData(ImDrawData *drawData,
+                               id<MTLCommandBuffer> commandBuffer,
+                               id<MTLRenderCommandEncoder> encoder)
 {
-    if (drawData == nullptr || encoder == nil || g_pipelineState == nil)
+    if (drawData == nullptr || commandBuffer == nil || encoder == nil || g_pipelineState == nil)
         return;
 
     int fbWidth = (int)(drawData->DisplaySize.x * drawData->FramebufferScale.x);
@@ -283,20 +323,32 @@ void ImGuiMetal_RenderDrawData(ImDrawData *drawData, id<MTLRenderCommandEncoder>
     const MTLIndexType indexType =
         sizeof(ImDrawIdx) == 2 ? MTLIndexTypeUInt16 : MTLIndexTypeUInt32;
 
+    NSUInteger vertexBufferLength = (NSUInteger)drawData->TotalVtxCount * sizeof(ImDrawVert);
+    NSUInteger indexBufferLength = (NSUInteger)drawData->TotalIdxCount * sizeof(ImDrawIdx);
+    id<MTLBuffer> vertexBuffer = ImGuiMetal_DequeueBuffer(vertexBufferLength);
+    id<MTLBuffer> indexBuffer = ImGuiMetal_DequeueBuffer(indexBufferLength);
+    if (vertexBuffer == nil || indexBuffer == nil)
+    {
+        ImGuiMetal_ReturnBuffer(vertexBuffer);
+        ImGuiMetal_ReturnBuffer(indexBuffer);
+        return;
+    }
+
+    size_t vertexBufferOffset = 0;
+    size_t indexBufferOffset = 0;
+
     for (int n = 0; n < drawData->CmdListsCount; n++)
     {
         const ImDrawList *cmdList = drawData->CmdLists[n];
         if (cmdList->VtxBuffer.Size == 0 || cmdList->IdxBuffer.Size == 0)
             continue;
 
-        id<MTLBuffer> vertexBuffer =
-            [g_device newBufferWithBytes:cmdList->VtxBuffer.Data
-                                  length:(NSUInteger)cmdList->VtxBuffer.Size * sizeof(ImDrawVert)
-                                 options:MTLResourceStorageModeShared];
-        id<MTLBuffer> indexBuffer =
-            [g_device newBufferWithBytes:cmdList->IdxBuffer.Data
-                                  length:(NSUInteger)cmdList->IdxBuffer.Size * sizeof(ImDrawIdx)
-                                 options:MTLResourceStorageModeShared];
+        memcpy((uint8_t *)vertexBuffer.contents + vertexBufferOffset,
+               cmdList->VtxBuffer.Data,
+               (size_t)cmdList->VtxBuffer.Size * sizeof(ImDrawVert));
+        memcpy((uint8_t *)indexBuffer.contents + indexBufferOffset,
+               cmdList->IdxBuffer.Data,
+               (size_t)cmdList->IdxBuffer.Size * sizeof(ImDrawIdx));
         [encoder setVertexBuffer:vertexBuffer offset:0 atIndex:0];
 
         for (int i = 0; i < cmdList->CmdBuffer.Size; i++)
@@ -332,12 +384,21 @@ void ImGuiMetal_RenderDrawData(ImDrawData *drawData, id<MTLRenderCommandEncoder>
                 continue;
             [encoder setFragmentTexture:texture atIndex:0];
 
-            [encoder setVertexBufferOffset:(NSUInteger)cmd->VtxOffset * sizeof(ImDrawVert) atIndex:0];
+            [encoder setVertexBufferOffset:vertexBufferOffset + (NSUInteger)cmd->VtxOffset * sizeof(ImDrawVert) atIndex:0];
             [encoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
                                indexCount:cmd->ElemCount
                                 indexType:indexType
                               indexBuffer:indexBuffer
-                        indexBufferOffset:(NSUInteger)cmd->IdxOffset * sizeof(ImDrawIdx)];
+                        indexBufferOffset:indexBufferOffset + (NSUInteger)cmd->IdxOffset * sizeof(ImDrawIdx)];
         }
+
+        vertexBufferOffset += (size_t)cmdList->VtxBuffer.Size * sizeof(ImDrawVert);
+        indexBufferOffset += (size_t)cmdList->IdxBuffer.Size * sizeof(ImDrawIdx);
     }
+
+    [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>)
+    {
+        ImGuiMetal_ReturnBuffer(vertexBuffer);
+        ImGuiMetal_ReturnBuffer(indexBuffer);
+    }];
 }
