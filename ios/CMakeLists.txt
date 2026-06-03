@@ -25,15 +25,52 @@ set(SATDUMP_IOS_SOURCES
     imgui_backends/imgui_metal_renderer.mm
 )
 
-# Files copied into the application bundle (read by the app at runtime).
+# Runtime data is bundled under a renamed directory.
+#
+# Why "satdump_resources" and not just "resources":
+# A lowercase "resources" folder at the iOS app bundle root collides with
+# codesign's default rules: the macOS-style ^Resources/ rule pattern matches
+# it (HFS+/APFS is case-insensitive), the files end up excluded from the
+# _CodeSignature/CodeResources manifest, and signing fails with the
+# misleading "code object is not signed at all: In subcomponent ..."
+# error. Renaming the bundled folder side-steps that.
+#
+# At first launch the iOS frontend copies bundle/satdump_resources/ back to
+# Documents/resources/ (see AppViewController.mm), so the rest of SatDump
+# keeps reading from "resources/" at runtime exactly as before.
+
+set(SATDUMP_IOS_STAGED_DIR "${CMAKE_CURRENT_BINARY_DIR}/staged-bundle")
+
 set(SATDUMP_BUNDLE_FILES
     "${CMAKE_SOURCE_DIR}/satdump_cfg.json"
-    "${CMAKE_SOURCE_DIR}/icon.png"
-    "${CMAKE_SOURCE_DIR}/resources"
-    "${CMAKE_SOURCE_DIR}/pipelines"
+    "${SATDUMP_IOS_STAGED_DIR}/satdump_resources"
+    "${SATDUMP_IOS_STAGED_DIR}/satdump_pipelines"
+)
+
+# The staged folders are produced by the PRE_BUILD step below, not present at
+# configure time - mark them as generated so CMake does not complain.
+set_source_files_properties(
+    "${SATDUMP_IOS_STAGED_DIR}/satdump_resources"
+    "${SATDUMP_IOS_STAGED_DIR}/satdump_pipelines"
+    PROPERTIES GENERATED TRUE
 )
 
 add_executable(SatDump MACOSX_BUNDLE ${SATDUMP_IOS_SOURCES} ${SATDUMP_BUNDLE_FILES})
+
+# Stage the runtime data with renamed folders before each build. xattr is
+# stripped from the staged copy: leftover quarantine / metadata xattrs on
+# bundled files make codesign fail with the same generic 'not signed' error.
+add_custom_command(TARGET SatDump PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${SATDUMP_IOS_STAGED_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${SATDUMP_IOS_STAGED_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/resources" "${SATDUMP_IOS_STAGED_DIR}/satdump_resources"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/pipelines" "${SATDUMP_IOS_STAGED_DIR}/satdump_pipelines"
+    COMMAND xattr -cr "${SATDUMP_IOS_STAGED_DIR}"
+    COMMENT "Staging SatDump runtime data for the iOS bundle"
+    VERBATIM
+)
 
 target_include_directories(SatDump PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -51,10 +88,7 @@ target_link_directories(SatDump PRIVATE
 # Bundle the runtime data via the RESOURCE target property. This makes the
 # CMake Xcode generator place the files in Xcode's "Copy Bundle Resources"
 # build phase, so they are hashed into _CodeSignature/CodeResources as part
-# of the normal signing pipeline. The older approach of setting
-# MACOSX_PACKAGE_LOCATION on each source file produced a generic "Copy Files"
-# build phase that confused codesign with errors such as
-# "code object is not signed at all: In subcomponent ... satdump_cfg.json".
+# of the normal signing pipeline.
 set_target_properties(SatDump PROPERTIES
     RESOURCE "${SATDUMP_BUNDLE_FILES}"
 )

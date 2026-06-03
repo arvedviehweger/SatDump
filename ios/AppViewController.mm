@@ -103,15 +103,28 @@
     NSString *bundle = [[NSBundle mainBundle] resourcePath];
 
     // resources/ and pipelines/ are large and read-only: copy once.
-    for (NSString *item in @[ @"resources", @"pipelines" ])
+    //
+    // In the bundle the folders are named "satdump_resources" and
+    // "satdump_pipelines" (see ios/CMakeLists.txt) - a plain "resources"
+    // folder at the bundle root would collide with codesign's macOS-style
+    // ^Resources/ rule pattern on the case-insensitive filesystem and break
+    // signing. The destinations inside Documents keep the original names so
+    // the rest of SatDump finds "resources/..." in the working directory
+    // unchanged.
+    NSDictionary<NSString *, NSString *> *bundledFolders = @{
+        @"satdump_resources" : @"resources",
+        @"satdump_pipelines" : @"pipelines",
+    };
+    for (NSString *bundleName in bundledFolders)
     {
-        NSString *destination = [documents stringByAppendingPathComponent:item];
-        NSString *source = [bundle stringByAppendingPathComponent:item];
+        NSString *runtimeName = bundledFolders[bundleName];
+        NSString *destination = [documents stringByAppendingPathComponent:runtimeName];
+        NSString *source = [bundle stringByAppendingPathComponent:bundleName];
         if (![fileManager fileExistsAtPath:destination] && [fileManager fileExistsAtPath:source])
         {
             NSError *error = nil;
             if (![fileManager copyItemAtPath:source toPath:destination error:&error])
-                NSLog(@"[SatDump] Could not copy %@: %@", item, error);
+                NSLog(@"[SatDump] Could not copy %@: %@", bundleName, error);
         }
     }
 
