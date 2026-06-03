@@ -259,9 +259,11 @@ if(PLUGIN_GVAR_EXTENDED)
 endif()
 
 # ##############################################################################
+# SIMD plugins. iOS devices are ARM64, so only the NEON plugin applies there;
+# the x86 SSE41/AVX2 plugins are skipped on iOS (see SATDUMP_IOS).
 option(PLUGIN_SIMD_SSE41 "Enable SIMD SSE41 plugin" ON)
 
-if(PLUGIN_SIMD_SSE41)
+if(PLUGIN_SIMD_SSE41 AND NOT SATDUMP_IOS)
   add_subdirectory(simd_extensions/simd_sse41)
 endif()
 
@@ -273,71 +275,79 @@ endif()
 
 option(PLUGIN_SIMD_AVX2 "Enable SIMD AVX2 plugin" ON)
 
-if(PLUGIN_SIMD_AVX2)
+if(PLUGIN_SIMD_AVX2 AND NOT SATDUMP_IOS)
   add_subdirectory(simd_extensions/simd_avx2)
 endif()
 
 # ##############################################################################
+# USB-based SDR source plugins.
+#
+# iOS provides no USB host access, so every USB SDR source below is skipped
+# when building for iOS (guarded with "AND NOT SATDUMP_IOS"). Only the
+# network-based SDR sources further down stay enabled on iOS.
 option(PLUGIN_AIRSPY_SDR_SUPPORT "Enable Airspy SDR Support plugin" ON)
 
-if(PLUGIN_AIRSPY_SDR_SUPPORT)
+if(PLUGIN_AIRSPY_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/airspy_sdr_support)
 endif()
 
 option(PLUGIN_AIRSPYHF_SDR_SUPPORT "Enable AirspyHF SDR Support plugin" ON)
 
-if(PLUGIN_AIRSPYHF_SDR_SUPPORT)
+if(PLUGIN_AIRSPYHF_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/airspyhf_sdr_support)
 endif()
 
 option(PLUGIN_HACKRF_SDR_SUPPORT "Enable HackRF SDR Support plugin" ON)
 
-if(PLUGIN_HACKRF_SDR_SUPPORT)
+if(PLUGIN_HACKRF_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/hackrf_sdr_support)
 endif()
 
 option(PLUGIN_LIMESDR_SDR_SUPPORT "Enable LimeSDR SDR Support plugin" ON)
 
-if(PLUGIN_LIMESDR_SDR_SUPPORT)
+if(PLUGIN_LIMESDR_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/limesdr_sdr_support)
 endif()
 
 option(PLUGIN_SDRPLAY_SDR_SUPPORT "Enable SDRPlay SDR Support plugin" ON)
 
-if(PLUGIN_SDRPLAY_SDR_SUPPORT)
+if(PLUGIN_SDRPLAY_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/sdrplay_sdr_support)
 endif()
 
 option(PLUGIN_PLUTOSDR_SDR_SUPPORT "Enable PlutoSDR SDR Support plugin" ON)
 
-if(PLUGIN_PLUTOSDR_SDR_SUPPORT)
+if(PLUGIN_PLUTOSDR_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/plutosdr_sdr_support)
 endif()
 
 option(PLUGIN_BLADERF_SDR_SUPPORT "Enable BladeRF SDR Support plugin" ON)
 
-if(PLUGIN_BLADERF_SDR_SUPPORT)
+if(PLUGIN_BLADERF_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/bladerf_sdr_support)
 endif()
 
 option(PLUGIN_USRP_SDR_SUPPORT "Enable USRP SDR Support plugin" ON)
 
-if(PLUGIN_USRP_SDR_SUPPORT)
+if(PLUGIN_USRP_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/usrp_sdr_support)
 endif()
 
 option(PLUGIN_RTLSDR_SDR_SUPPORT "Enable RTL-SDR SDR Support plugin" ON)
 
-if(PLUGIN_RTLSDR_SDR_SUPPORT)
+if(PLUGIN_RTLSDR_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/rtlsdr_sdr_support)
 endif()
 
 option(PLUGIN_MIRISDR_SDR_SUPPORT "Enable MiriSDR SDR Support plugin" ON)
 
-if(PLUGIN_MIRISDR_SDR_SUPPORT)
+if(PLUGIN_MIRISDR_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/mirisdr_sdr_support)
 endif()
 
+# ##############################################################################
+# Network-based SDR source plugins. These are the only SDR sources supported
+# on iOS and stay enabled there.
 option(PLUGIN_SPYSERVER_SUPPORT "Enable SpyServer Support plugin" ON)
 
 if(PLUGIN_SPYSERVER_SUPPORT)
@@ -358,19 +368,21 @@ endif()
 
 option(PLUGIN_AARONIA_SDR_SUPPORT "Enable Aaronia Spectran Support plugin" OFF)
 
-if(PLUGIN_AARONIA_SDR_SUPPORT)
+# ##############################################################################
+# More USB-based SDR sources - also skipped on iOS.
+if(PLUGIN_AARONIA_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/aaronia_sdr_support)
 endif()
 
 option(PLUGIN_RFNM_SDR_SUPPORT "Enable RFNM Support plugin" ON)
 
-if(PLUGIN_RFNM_SDR_SUPPORT)
+if(PLUGIN_RFNM_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/rfnm_sdr_support)
 endif()
 
 option(PLUGIN_RTAUDIO_SDR_SUPPORT "Enable RtAudio Source Support plugin" OFF)
 
-if(PLUGIN_RTAUDIO_SDR_SUPPORT)
+if(PLUGIN_RTAUDIO_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/rtaudio_sdr_support)
 endif()
 
@@ -382,7 +394,9 @@ endif()
 
 option(PLUGIN_REMOTE_SDR_SUPPORT "Enable Remote SDR Support plugin (WIP!)" ON)
 
-if(PLUGIN_REMOTE_SDR_SUPPORT)
+# Skipped on iOS: this plugin also builds a standalone satdump_sdr_server
+# executable, which cannot be produced inside an iOS app bundle.
+if(PLUGIN_REMOTE_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/remote_sdr_support)
 endif()
 
@@ -390,7 +404,7 @@ endif()
 option(PLUGIN_SDDC_SDR_SUPPORT
        "Enable SDDC (RX666, RX888, etc) SDR Support plugin" OFF)
 
-if(PLUGIN_SDDC_SDR_SUPPORT)
+if(PLUGIN_SDDC_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/sddc_sdr_support)
 endif()
 
@@ -398,7 +412,7 @@ endif()
 option(PLUGIN_SOAPY_SDR_SUPPORT
        "Enable Soapy SDR Support plugin (NOT RECOMMENDED!)" OFF)
 
-if(PLUGIN_SOAPY_SDR_SUPPORT)
+if(PLUGIN_SOAPY_SDR_SUPPORT AND NOT SATDUMP_IOS)
   add_subdirectory(sdr_sources/soapy_sdr_support)
 endif()
 
@@ -411,7 +425,9 @@ endif()
 
 option(PLUGIN_PORTAUDIO_SINK "Enable PortAudio Audio Sink plugin" ON)
 
-if(PLUGIN_PORTAUDIO_SINK)
+# Skipped on iOS for now: PortAudio is not part of the prebuilt iOS
+# dependency set. Audio output can be revisited in a later iteration.
+if(PLUGIN_PORTAUDIO_SINK AND NOT SATDUMP_IOS)
   add_subdirectory(audio_sinks/portaudio_audio_sink)
 endif()
 
