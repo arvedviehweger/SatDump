@@ -4,7 +4,11 @@
 
 namespace lrit
 {
-    uint16_t crc_table[] = {
+    // 'inline' (C++17 inline variable) gives this header-defined table a
+    // single definition across every translation unit that includes it,
+    // which avoids duplicate-symbol link errors when all of SatDump is
+    // statically linked into a single binary (iOS).
+    inline constexpr uint16_t crc_table[] = {
         0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7,
         0x8108, 0x9129, 0xA14A, 0xB16B, 0xC18C, 0xD1AD, 0xE1CE, 0xF1EF,
         0x1231, 0x0210, 0x3273, 0x2252, 0x52B5, 0x4294, 0x72F7, 0x62D6,

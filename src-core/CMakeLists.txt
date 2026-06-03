@@ -25,6 +25,11 @@ file(GLOB_RECURSE SatDump_core_CPPS *.cpp
 
 find_package(PkgConfig)
 
+# Compile Lua's all-in-one source as a library: skip lua.c (the standalone
+# interpreter's main()), which would otherwise collide with the application's
+# own main() when everything is statically linked together (iOS).
+set_source_files_properties(libs/lua/onelua.c PROPERTIES COMPILE_DEFINITIONS "MAKE_LIB=1")
+
 add_library(satdump_core ${SATDUMP_LIBRARY_TYPE} ${SatDump_core_CPPS})
 target_include_directories(satdump_core PUBLIC .)
 

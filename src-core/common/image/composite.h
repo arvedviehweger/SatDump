@@ -30,7 +30,12 @@ namespace image
         int img_depth;
     };
 
-    compo_cfg_t get_compo_cfg(std::vector<Image> &inputChannels, std::vector<std::string> &channelNumbers, nlohmann::json &offsets_cfg)
+    // 'inline' so the multiple translation units that include this header
+    // share a single definition, instead of each producing its own copy
+    // (duplicate-symbol link error on fully-static iOS builds). The other
+    // helpers in this header (get_channel_vals, get_channel_vals_raw) are
+    // already marked inline.
+    inline compo_cfg_t get_compo_cfg(std::vector<Image> &inputChannels, std::vector<std::string> &channelNumbers, nlohmann::json &offsets_cfg)
     {
         bool hasOffsets = !offsets_cfg.empty();
         std::vector<int> offsets;
