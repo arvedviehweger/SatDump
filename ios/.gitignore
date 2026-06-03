@@ -1,0 +1,18 @@
+# iOS build output
+build/
+build-ios/
+DerivedData/
+*.xcodeproj/
+*.xcworkspace/
+
+# Prebuilt cross-compiled dependencies (large binaries, built separately)
+deps/lib/
+deps/include/
+deps/share/
+
+# Stock Dear ImGui backend, fetched by imgui_backends/fetch_imgui_backends.sh
+imgui_backends/imgui_impl_metal.h
+imgui_backends/imgui_impl_metal.mm
+
+# macOS clutter
+.DS_Store
