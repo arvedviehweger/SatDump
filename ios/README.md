@@ -51,17 +51,7 @@ curl, zstd, tiff). These must be cross-compiled for `arm64-ios` and placed
 under `ios/deps`. See [`deps/README.md`](deps/README.md) for the exact list
 and the recommended way to build them (vcpkg with an `arm64-ios` triplet).
 
-### 2. Fetch the Dear ImGui Metal backend
-
-The Metal renderer backend is a stock Dear ImGui file and is **not** vendored
-in this repository. Fetch the version matching the bundled ImGui:
-
-```sh
-cd ios
-./imgui_backends/fetch_imgui_backends.sh
-```
-
-### 3. Generate the Xcode project
+### 2. Generate the Xcode project
 
 ```sh
 cd ios
@@ -80,7 +70,7 @@ cmake -B build-ios -G Xcode \
       -DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO
 ```
 
-### 4. Build and run
+### 3. Build and run
 
 Open `build-ios/SatDump.xcodeproj` in Xcode, select the `SatDump` scheme and
 a device, set your signing team, then build and run. The generated project is
