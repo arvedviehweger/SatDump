@@ -40,6 +40,12 @@ namespace satdump
             user_path = std::string(getenv("APPDATA")) + "/satdump";
 #elif __ANDROID__
         user_path = ".";
+#elif defined(SATDUMP_IOS)
+        // On iOS the application copies its bundled resources into a writable
+        // working directory inside the app sandbox and chdir()s into it at
+        // startup (see ios/main.mm). All paths are therefore relative to that
+        // directory, exactly like on Android.
+        user_path = ".";
 #else
         user_path = std::string(getenv("HOME")) + "/.config/satdump";
 #endif

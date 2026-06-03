@@ -1,7 +1,10 @@
 #define SATDUMP_DLL_EXPORT 1
 #include "satdump_vars.h"
 
-#if defined (__APPLE__)
+// On iOS the resources live inside the (writable) working directory the app
+// chdir()s into at startup, so the macOS executable-relative search below is
+// not used; iOS is handled together with Android further down.
+#if defined (__APPLE__) && !defined (SATDUMP_IOS)
 #include <filesystem>
 #include <mach-o/dyld.h>
 #include <libgen.h>
@@ -17,7 +20,7 @@
 
 namespace satdump
 {
-#if defined (__APPLE__)
+#if defined (__APPLE__) && !defined (SATDUMP_IOS)
         std::string get_search_path(const char *target)
         {
             uint32_t bufsize = PATH_MAX;
@@ -42,7 +45,7 @@ namespace satdump
         }
 #endif
 
-#if defined (__APPLE__) || defined (_WIN32)
+#if (defined (__APPLE__) && !defined (SATDUMP_IOS)) || defined (_WIN32)
         std::string init_res_path()
         {
             std::string search_dir = get_search_path(RESOURCES_SEARCH_PATH);
@@ -67,7 +70,7 @@ namespace satdump
                 return std::string(LIBRARIES_PATH);
 #endif
         }
-#elif defined (__ANDROID__)
+#elif defined (__ANDROID__) || defined (SATDUMP_IOS)
         std::string init_res_path()
         {
             return "./";
