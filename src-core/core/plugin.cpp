@@ -1,14 +1,17 @@
 #define SATDUMP_DLL_EXPORT 1
 #include "plugin.h"
+#include "logger.h"
+#include <filesystem>
+#include <vector>
+#include "satdump_vars.h"
+#include "core/exception.h"
+
+#ifndef SATDUMP_STATIC_PLUGINS
 #ifdef _WIN32
 #include "libs/dlfcn/dlfcn.h"
 #else
 #include <dlfcn.h>
 #endif
-#include "logger.h"
-#include <filesystem>
-#include "satdump_vars.h"
-#include "core/exception.h"
 
 std::shared_ptr<satdump::Plugin> loadPlugin(std::string plugin)
 {
@@ -29,6 +32,7 @@ std::shared_ptr<satdump::Plugin> loadPlugin(std::string plugin)
 
     return std::shared_ptr<satdump::Plugin>(pluginObject);
 }
+#endif
 
 namespace satdump
 {
@@ -39,6 +43,73 @@ namespace satdump
 #ifdef __ANDROID__
 std::string android_plugins_dir = "";
 #endif
+
+#ifdef SATDUMP_STATIC_PLUGINS
+
+// ----------------------------------------------------------------------------
+// Static-plugin mode (iOS and other fully-static builds)
+//
+// Plugins are linked statically into the application. Each one registers a
+// factory function via the PLUGIN_LOADER macro during static initialization;
+// loadPlugins() then instantiates all of them.
+// ----------------------------------------------------------------------------
+
+namespace
+{
+    // The registry is wrapped in a function-local static so it is guaranteed
+    // to be constructed before the first plugin registers itself, regardless
+    // of static-initialization order across translation units.
+    std::vector<satdump::PluginFactory> &getStaticPluginRegistry()
+    {
+        static std::vector<satdump::PluginFactory> registry;
+        return registry;
+    }
+}
+
+namespace satdump
+{
+    void registerStaticPlugin(PluginFactory factory)
+    {
+        getStaticPluginRegistry().push_back(factory);
+    }
+}
+
+void loadPlugins(std::map<std::string, std::shared_ptr<satdump::Plugin>> &loaded_plugins)
+{
+    std::vector<satdump::PluginFactory> &registry = getStaticPluginRegistry();
+    logger->info("Loading " + std::to_string(registry.size()) + " statically-linked plugin(s)");
+
+    for (satdump::PluginFactory factory : registry)
+    {
+        try
+        {
+            satdump::Plugin *pluginObject = factory();
+            pluginObject->init();
+            std::shared_ptr<satdump::Plugin> pl(pluginObject);
+            logger->trace("Plugin " + pl->getID() + " loaded!");
+            loaded_plugins.insert({pl->getID(), pl});
+        }
+        catch (std::exception &e)
+        {
+            logger->error(e.what());
+        }
+    }
+
+    if (loaded_plugins.size() > 0)
+    {
+        logger->debug("Loaded plugins (" + std::to_string(loaded_plugins.size()) + ") : ");
+        for (std::pair<const std::string, std::shared_ptr<satdump::Plugin>> &it : loaded_plugins)
+            logger->debug(" - " + it.first);
+    }
+    else
+        logger->warn("No statically-linked plugins found!");
+}
+
+#else
+
+// ----------------------------------------------------------------------------
+// Default mode: plugins are shared libraries loaded at runtime with dlopen().
+// ----------------------------------------------------------------------------
 
 void loadPlugins(std::map<std::string, std::shared_ptr<satdump::Plugin>> &loaded_plugins)
 {
@@ -107,3 +178,5 @@ void loadPlugins(std::map<std::string, std::shared_ptr<satdump::Plugin>> &loaded
             logger->warn("No Plugins in " + plugins_path + "!");
     }
 }
+
+#endif
