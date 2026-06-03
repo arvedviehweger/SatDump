@@ -100,6 +100,21 @@ foreach(plugin_target ${SATDUMP_PLUGIN_TARGETS})
     endif()
 endforeach()
 
+# Link every prebuilt static library shipped in ios/deps/lib.
+#
+# This covers both the libraries satdump_core references directly (volk,
+# fftw3f, png, ...) and their transitive dependencies. In particular, curl
+# built against OpenSSL pulls in libssl/libcrypto - linking the whole
+# ios/deps/lib directory resolves those without having to enumerate every
+# transitive dependency by hand. Listing an archive more than once is
+# harmless. (Re-run CMake after adding new libraries here.)
+file(GLOB SATDUMP_IOS_DEP_LIBS "${CMAKE_SOURCE_DIR}/ios/deps/lib/*.a")
+if(SATDUMP_IOS_DEP_LIBS)
+    target_link_libraries(SatDump PRIVATE ${SATDUMP_IOS_DEP_LIBS})
+else()
+    message(WARNING "No prebuilt libraries found in ios/deps/lib - see ios/deps/README.md")
+endif()
+
 # iOS system frameworks.
 target_link_libraries(SatDump PRIVATE
     "-framework Metal"

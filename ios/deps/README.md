@@ -29,12 +29,25 @@ specific) — only this README is tracked.
 | zstd     | `libzstd.a`           | ZIQ + SDR++ Server decompression      |
 | libtiff  | `libtiff.a`           | TIFF image I/O                        |
 
-`curl` should be built against Apple's Secure Transport (the iOS CMake
-already links the `Security`, `CFNetwork` and `SystemConfiguration`
-frameworks for it).
-
 If `zstd` is not provided, the build still works but ZIQ support and the
 SDR++ Server source plugin are disabled.
+
+### curl and TLS
+
+`curl` needs a TLS backend. Two options work:
+
+* **OpenSSL** — the vcpkg `curl` port pulls in `openssl`, producing
+  `libssl.a` and `libcrypto.a`. If you copied the whole vcpkg `lib/`
+  directory into `ios/deps/lib`, these are already present and the iOS
+  build links them automatically (it links *every* `.a` in
+  `ios/deps/lib`).
+* **Apple Secure Transport** — alternatively build curl with the
+  `sectransp` feature (`vcpkg install "curl[core,sectransp]"`), which uses
+  the OS TLS stack and needs no OpenSSL. The iOS build already links the
+  `Security`, `CFNetwork` and `SystemConfiguration` frameworks for this.
+
+Either way, just make sure every `.a` that curl depends on ends up in
+`ios/deps/lib`.
 
 ## VOLK — build it yourself (do NOT use vcpkg)
 
