@@ -9,6 +9,7 @@
 #include "logger.h"
 #include "init.h"
 #include "main_ui.h"
+#include "core/backend.h"
 #include "core/style.h"
 #include "core/config.h"
 #include "loader/loader.h"

@@ -10,7 +10,9 @@
 #include "backend.h"
 #include "resources.h"
 
-#ifdef __APPLE__
+// CGDirectDisplay.h is part of the macOS-only display-management API and
+// does not exist in the iOS SDK.
+#if defined(__APPLE__) && !defined(SATDUMP_IOS)
 #include <CoreGraphics/CGDirectDisplay.h>
 #endif
 
@@ -303,7 +305,9 @@ namespace style
 
     float macos_framebuffer_scale()
     {
-#ifdef __APPLE__
+        // The macOS display-mode API is not available on iOS; the iOS
+        // frontend handles screen scaling itself (UIScreen.scale).
+#if defined(__APPLE__) && !defined(SATDUMP_IOS)
         CGDirectDisplayID display_id = CGMainDisplayID();
         CGDisplayModeRef display_mode = CGDisplayCopyDisplayMode(display_id);
         float return_value = (float)CGDisplayModeGetPixelWidth(display_mode) / (float)CGDisplayPixelsWide(display_id);
