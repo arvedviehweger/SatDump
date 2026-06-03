@@ -5,6 +5,13 @@
 #include "imgui/imgui_stdlib.h"
 #include "android_dialogs.h"
 
+#ifdef SATDUMP_IOS
+void show_select_file_dialog();
+std::string get_select_file_dialog_result();
+void show_select_directory_dialog();
+std::string get_select_directory_dialog_result();
+#endif
+
 #ifdef _MSC_VER
 #include <direct.h>
 #endif
@@ -69,7 +76,7 @@ bool FileSelectWidget::draw(std::string hint)
     {
         if (!directory)
         {
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(SATDUMP_IOS)
             show_select_file_dialog();
 #else
             fileselect = new pfd::open_file(selection_text.c_str(), default_dir, { "All Files", "*" }, pfd::opt::force_path);
@@ -77,7 +84,7 @@ bool FileSelectWidget::draw(std::string hint)
         }
         else
         {
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(SATDUMP_IOS)
             show_select_directory_dialog();
 #else
             dirselect = new pfd::select_folder(selection_text.c_str(), default_dir, pfd::opt::force_path);
@@ -93,7 +100,7 @@ bool FileSelectWidget::draw(std::string hint)
     if (waiting_for_res)
     {
         std::string get = "";
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(SATDUMP_IOS)
         if (!directory)
             get = get_select_file_dialog_result();
         else

@@ -21,6 +21,7 @@ set(SATDUMP_IOS_SOURCES
     main.mm
     AppViewController.mm
     backend.mm
+    file_dialogs.mm
     imgui_image.mm
     imgui_backends/imgui_metal_renderer.mm
 )
@@ -185,6 +186,7 @@ target_link_libraries(SatDump PRIVATE
     "-framework Foundation"
     "-framework QuartzCore"
     "-framework CoreGraphics"
+    "-framework UniformTypeIdentifiers"
     "-framework Security"
     "-framework CFNetwork"
     "-framework SystemConfiguration"
