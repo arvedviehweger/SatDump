@@ -111,5 +111,15 @@ cp -r vcpkg/installed/arm64-ios/include/* ios/deps/include/
 cp -r vcpkg/installed/arm64-ios/lib/*     ios/deps/lib/
 ```
 
+Copying the whole `lib/` directory is fine — the iOS build links every
+`.a` in `ios/deps/lib`. The one exception is **libjpeg / libjpeg-turbo**
+(vcpkg pulls it in as a dependency of `tiff`): SatDump vendors its own
+libjpeg, so any external `libjpeg*.a` / `libturbojpeg*.a` is deliberately
+excluded from the link to avoid duplicate `jpeg12_*` symbols.
+
+> Build all dependencies with the same `-DCMAKE_OSX_DEPLOYMENT_TARGET` as
+> the app (14.0). Otherwise the linker prints harmless "object file was
+> built for newer iOS version" warnings.
+
 Alternatively each library can be cross-compiled manually with the iOS SDK
 (`xcrun --sdk iphoneos`) and an `arm64-apple-ios` target.

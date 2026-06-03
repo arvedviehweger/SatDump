@@ -109,6 +109,14 @@ endforeach()
 # transitive dependency by hand. Listing an archive more than once is
 # harmless. (Re-run CMake after adding new libraries here.)
 file(GLOB SATDUMP_IOS_DEP_LIBS "${CMAKE_SOURCE_DIR}/ios/deps/lib/*.a")
+
+# SatDump vendors its own libjpeg (src-core/libs/jpeg and src-core/libs/jpeg12,
+# compiled into satdump_core). An external libjpeg - e.g. the libjpeg-turbo
+# that vcpkg installs as a dependency of libtiff - defines the same jpeg12_*
+# symbols and causes duplicate-symbol link errors. It is dropped here;
+# libtiff's JPEG codec resolves against SatDump's bundled libjpeg instead.
+list(FILTER SATDUMP_IOS_DEP_LIBS EXCLUDE REGEX "lib(jpeg|turbojpeg)[^/]*\\.a$")
+
 if(SATDUMP_IOS_DEP_LIBS)
     target_link_libraries(SatDump PRIVATE ${SATDUMP_IOS_DEP_LIBS})
 else()
