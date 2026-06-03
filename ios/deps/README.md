@@ -60,9 +60,18 @@ library for iOS. VOLK's `lib/CMakeLists.txt` needs a small patch so it can
 produce a static archive for iOS (force static libs, drop `pthread`
 linkage, set a per-config archive output directory).
 
+SatDump ships the patched file at:
+
+```text
+ios/deps/gnuradio_volk/lib/CMakeLists.txt
+```
+
+Copy it into the GNU Radio VOLK source tree before configuring the iOS build.
+
 ```sh
 git clone --recursive https://github.com/gnuradio/volk
 cd volk
+cp <satdump>/ios/deps/gnuradio_volk/lib/CMakeLists.txt lib/CMakeLists.txt
 
 cmake -B build-ios -G Xcode \
   -DCMAKE_SYSTEM_NAME=iOS \
