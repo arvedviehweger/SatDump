@@ -89,3 +89,17 @@ a device, set your signing team, then build and run.
   server executable, which cannot live inside an iOS app bundle.
 * Local network access (for RTL-TCP / SpyServer servers on your LAN)
   triggers the iOS "Local Network" privacy prompt the first time it is used.
+* **App icon (AppIcon):** the iOS port does **not** bundle SatDump's
+  `icon.png` as the application icon - iOS requires the icon to live in
+  an asset catalog (`Assets.xcassets/AppIcon.appiconset`). For a real
+  release, add such an asset catalog in Xcode (or via a future CMake
+  hook) and set `XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME` to
+  its name. SatDump's in-app branding (loading screen, About tab) still
+  works because `icon.png` lives inside the bundled `resources/`
+  directory.
+* The bundled runtime data is staged inside the app bundle under
+  `satdump_resources/` and `satdump_pipelines/`; a lowercase `resources/`
+  folder at the bundle root collides with codesign's macOS-style
+  `^Resources/` rule pattern on the case-insensitive filesystem and
+  makes signing fail. The iOS frontend copies them back to
+  `Documents/resources/` and `Documents/pipelines/` on first launch.
