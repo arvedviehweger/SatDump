@@ -1,27 +1,37 @@
-# Dear ImGui Metal backend
+# Dear ImGui Metal renderer backend
 
 The iOS frontend renders the Dear ImGui UI with **Metal**.
 
-SatDump vendors Dear ImGui itself under `src-core/imgui`, but not the
-optional renderer backends. The Metal renderer backend is a stock,
-unmodified Dear ImGui file, so instead of duplicating it in this repository
-it is fetched on demand:
+Instead of the stock `imgui_impl_metal` backend, the iOS port uses a small,
+**self-contained renderer** that lives here:
 
-```sh
-./fetch_imgui_backends.sh
-```
+* `imgui_metal_renderer.h`
+* `imgui_metal_renderer.mm`
 
-This downloads, into this directory:
+## Why a custom renderer?
 
-* `imgui_impl_metal.h`
-* `imgui_impl_metal.mm`
+SatDump references textures through small `unsigned int` handles (see
+`src-core/imgui/imgui_image.h`). A native Metal texture is a 64-bit object
+pointer and does not fit into such a handle.
 
-at the Dear ImGui version that matches the bundled copy (currently `v1.90` —
-see `IMGUI_VERSION` in `src-core/imgui/imgui.h`).
+The stock `imgui_impl_metal` backend assumes `ImTextureID` *is* the
+`MTLTexture`. Supporting SatDump's integer handles with the stock backend
+would require either patching it or widening the texture-handle type
+throughout the cross-platform SatDump code.
 
-Both fetched files are git-ignored. The iOS `CMakeLists.txt` picks them up
-automatically once present.
+This in-tree renderer instead keeps an internal **texture registry** that
+maps each integer handle to an `id<MTLTexture>`. That keeps all
+cross-platform SatDump code untouched and removes any external dependency —
+nothing needs to be downloaded to build the iOS app.
 
-> The **platform/input** side (touch, keyboard) is handled directly by
-> `AppViewController.mm`, so the `imgui_impl_osx` backend is intentionally
-> not used.
+## What it does
+
+* Compiles the ImGui vertex/fragment shaders (Metal Shading Language).
+* Builds the render pipeline (alpha blending) and a linear sampler.
+* Manages the Dear ImGui font atlas texture.
+* Renders `ImDrawData` into a Metal render command encoder.
+* Owns the integer-handle → `MTLTexture` registry used by
+  `../imgui_image.mm`.
+
+The **platform/input** side (touch, keyboard) is handled directly by
+`../AppViewController.mm`.

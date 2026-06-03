@@ -10,9 +10,8 @@ deps/lib/
 deps/include/
 deps/share/
 
-# Stock Dear ImGui backend, fetched by imgui_backends/fetch_imgui_backends.sh
-imgui_backends/imgui_impl_metal.h
-imgui_backends/imgui_impl_metal.mm
+# Obsolete: the iOS port uses an in-tree Metal renderer, no fetch needed
+imgui_backends/fetch_imgui_backends.sh
 
 # macOS clutter
 .DS_Store
