@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Allows SatDump to open IOKit user clients on a DriverKit extension that
+	  another app installed - currently the RTL-SDR DriverKit extension that
+	  ships inside the separate RTL-SDR Host app (see ios/sdr/rtlsdr/).
+
+	  Apple grants this entitlement per Developer Team after a manual
+	  request. The provisioning profile that signs SatDump must list it,
+	  otherwise device builds will fail at the codesign step with
+	  "Provisioning profile doesn't include the entitlement". If you do
+	  not have DriverKit access yet, comment out the entry below.
+	-->
+	<key>com.apple.developer.driverkit.communicates-with-drivers</key>
+	<true/>
+</dict>
+</plist>

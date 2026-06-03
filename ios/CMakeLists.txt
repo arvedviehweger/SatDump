@@ -115,6 +115,12 @@ set_target_properties(SatDump PROPERTIES
     # at build time and produces the platform-appropriate icon entries inside
     # the app bundle. Info.plist has a matching CFBundleIconName=AppIcon.
     XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
+
+    # App-level entitlements. Currently carries the DriverKit communicates-
+    # with-drivers entitlement that ios/sdr/rtlsdr needs to talk to the
+    # RTL-SDR Host dext. The provisioning profile must include the same
+    # entitlement (Apple grants this per-Team after a manual request).
+    XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS "${CMAKE_CURRENT_SOURCE_DIR}/SatDump.entitlements"
 )
 
 # ----------------------------------------------------------------------------
@@ -143,7 +149,15 @@ function(satdump_collect_targets out_var dir)
     set(${out_var} ${${out_var}} ${dir_targets} PARENT_SCOPE)
 endfunction()
 
+# iOS-only "plugin" targets that live under ios/sdr (e.g. the RTL-SDR
+# DriverKit integration). They are normal static libraries with
+# PLUGIN_LOADER registration; from the build system's point of view they
+# are indistinguishable from the regular plugins under plugins/ and are
+# force-loaded together with them below.
+add_subdirectory(sdr)
+
 satdump_collect_targets(SATDUMP_PLUGIN_TARGETS "${CMAKE_SOURCE_DIR}/plugins")
+satdump_collect_targets(SATDUMP_PLUGIN_TARGETS "${CMAKE_CURRENT_SOURCE_DIR}/sdr")
 
 foreach(plugin_target ${SATDUMP_PLUGIN_TARGETS})
     get_target_property(target_type ${plugin_target} TYPE)
@@ -190,4 +204,8 @@ target_link_libraries(SatDump PRIVATE
     "-framework Security"
     "-framework CFNetwork"
     "-framework SystemConfiguration"
+
+    # IOKit user-client API, used by ios/sdr/rtlsdr/rtlsdr_dext_bridge.c
+    # to talk to the RTL-SDR DriverKit extension.
+    "-framework IOKit"
 )

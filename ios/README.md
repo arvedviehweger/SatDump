@@ -108,3 +108,28 @@ plugin targets are built with optimized settings.
   `^Resources/` rule pattern on the case-insensitive filesystem and
   makes signing fail. The iOS frontend copies them back to
   `Documents/resources/` and `Documents/pipelines/` on first launch.
+
+## RTL-SDR via DriverKit
+
+iOS has no libusb, so USB SDRs are not directly addressable. The iOS
+port instead talks to an **RTL-SDR USBDriverKit extension** that ships
+inside a separate carrier app (the *RTL-SDR Host* project). SatDump
+opens an IOKit user client on that dext and reads IQ samples from a
+shared-memory ring buffer. See [`sdr/rtlsdr/README.md`](sdr/rtlsdr/README.md)
+for the full architecture, file layout and provisioning requirements.
+
+The integration requires:
+
+* iPadOS 16+ (USBDriverKit is not on iPhone).
+* The RTL-SDR Host app installed and launched at least once, so the
+  system extension is activated. The dext's
+  `com.apple.developer.driverkit.allow-third-party-userclients`
+  entitlement permits SatDump to open it.
+* The matching client-side entitlement
+  `com.apple.developer.driverkit.communicates-with-drivers` on
+  SatDump's app target. Already declared in
+  [`SatDump.entitlements`](SatDump.entitlements); your provisioning
+  profile must include it (Apple grants per-Team, then enable
+  per-App ID on developer.apple.com). If you do not have DriverKit
+  access for SatDump yet, comment out the entry in
+  `SatDump.entitlements`.
