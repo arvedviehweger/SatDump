@@ -8,6 +8,13 @@ android/SatDump/assets
 android/.idea
 android/.settings
 android/CMakeFiles
+
+# iOS local dependencies and vendored ImGui Metal backend
+ios/deps/include/
+ios/deps/lib/
+ios/imgui_backends/imgui_impl_metal.h
+ios/imgui_backends/imgui_impl_metal.mm
+
 **/.DS_Store
 resources/gk2a/EncryptionKeyMessage.bin
 .directory
