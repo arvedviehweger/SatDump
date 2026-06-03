@@ -169,7 +169,11 @@
         return;
     CGPoint location = [touch locationInView:self.view];
     CGFloat scale = self.view.contentScaleFactor;
-    ImGui::GetIO().AddMousePosEvent((float)(location.x * scale), (float)(location.y * scale));
+    ImGuiIO &io = ImGui::GetIO();
+    // Mark the events as coming from a touch screen so Dear ImGui uses its
+    // touch-friendly behaviour (no pre-press hover, more lenient hit aiming).
+    io.AddMouseSourceEvent(ImGuiMouseSource_TouchScreen);
+    io.AddMousePosEvent((float)(location.x * scale), (float)(location.y * scale));
 }
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
@@ -185,14 +189,18 @@
 
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
+    // Forward the final position then release the button. Do NOT move the
+    // cursor off-screen here: Dear ImGui finalizes a click on the next frame
+    // by checking that the position is still over the widget. Resetting the
+    // position before that frame swallows every tap.
     [self forwardTouchPosition:touches.anyObject];
-    ImGuiIO &io = ImGui::GetIO();
-    io.AddMouseButtonEvent(0, false);
-    io.AddMousePosEvent(-FLT_MAX, -FLT_MAX); // drop hover state after a tap
+    ImGui::GetIO().AddMouseButtonEvent(0, false);
 }
 
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
+    // A cancelled touch is intentionally NOT a click - drop the position so
+    // no widget is left hovered/clicked.
     ImGuiIO &io = ImGui::GetIO();
     io.AddMouseButtonEvent(0, false);
     io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
