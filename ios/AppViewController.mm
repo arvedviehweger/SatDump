@@ -15,10 +15,32 @@
 #include "loader/loader.h"
 #include "common/tracking/tle.h"
 
+// ----------------------------------------------------------------------------
+// Hidden UITextField subclass that drives the on-screen keyboard.
+//
+// We intentionally keep the backing field empty (shouldChangeCharactersInRange
+// returns NO). On iOS that means Backspace is delivered via -deleteBackward,
+// not via shouldChangeCharactersInRange with an empty replacement string -
+// the empty-string callback fires unreliably when the field has no content.
+// Overriding -deleteBackward gives us a consistent Backspace path.
+// ----------------------------------------------------------------------------
+@interface SatDumpKeyboardField : UITextField
+@end
+
+@implementation SatDumpKeyboardField
+- (void)deleteBackward
+{
+    ImGuiIO &io = ImGui::GetIO();
+    io.AddKeyEvent(ImGuiKey_Backspace, true);
+    io.AddKeyEvent(ImGuiKey_Backspace, false);
+    [super deleteBackward];
+}
+@end
+
 @implementation AppViewController
 {
     BOOL _satdumpReady;
-    UITextField *_keyboardField; // hidden field that drives the on-screen keyboard
+    SatDumpKeyboardField *_keyboardField; // hidden field driving the on-screen keyboard
 }
 
 // ----------------------------------------------------------------------------
@@ -215,7 +237,7 @@
 
 - (void)setupKeyboardField
 {
-    _keyboardField = [[UITextField alloc] initWithFrame:CGRectZero];
+    _keyboardField = [[SatDumpKeyboardField alloc] initWithFrame:CGRectZero];
     _keyboardField.delegate = self;
     _keyboardField.autocorrectionType = UITextAutocorrectionTypeNo;
     _keyboardField.autocapitalizationType = UITextAutocapitalizationTypeNone;
@@ -237,18 +259,11 @@
     shouldChangeCharactersInRange:(NSRange)range
                 replacementString:(NSString *)string
 {
+    // Backspace is handled by SatDumpKeyboardField's -deleteBackward override
+    // (more reliable on an empty field than this delegate callback).
     ImGuiIO &io = ImGui::GetIO();
-    if (string.length == 0)
-    {
-        // Backspace.
-        io.AddKeyEvent(ImGuiKey_Backspace, true);
-        io.AddKeyEvent(ImGuiKey_Backspace, false);
-    }
-    else
-    {
-        for (NSUInteger i = 0; i < string.length; i++)
-            io.AddInputCharacter([string characterAtIndex:i]);
-    }
+    for (NSUInteger i = 0; i < string.length; i++)
+        io.AddInputCharacter([string characterAtIndex:i]);
     return NO; // keep the backing text field empty
 }
 
