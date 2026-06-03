@@ -52,8 +52,14 @@ namespace satdump
         user, proceed to run both in parallel saving up on processing
         time.
         */
+        bool allow_multi_modules = parameters.count("disable_multi_modules") == 0;
+#ifdef SATDUMP_IOS
+        if (parameters.count("enable_multi_modules") == 0)
+            allow_multi_modules = false;
+#endif
+
         if (input_level == "baseband" &&
-            parameters.count("disable_multi_modules") == 0 &&
+            allow_multi_modules &&
             steps[1].modules.size() == 1 &&
             steps[2].modules.size() == 1)
         {
