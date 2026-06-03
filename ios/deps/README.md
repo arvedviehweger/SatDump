@@ -96,6 +96,64 @@ after a successful build/install — make sure `ios/deps/include/volk/volk.h`
 is present, otherwise `volk_includes/volk/volk_alloc.hh` will fail to
 compile.
 
+## libtiff — build it yourself (do NOT use vcpkg)
+
+> **Important:** the vcpkg `tiff` port is built with libjpeg support, which
+> drags `libjpeg-turbo` into `ios/deps/lib`. libjpeg-turbo exports the same
+> `jpeg12_*` symbols that SatDump's own bundled libjpeg defines, producing
+> duplicate-symbol link errors. Building libtiff yourself **without** the
+> jpeg backend avoids that entirely.
+
+Clone <https://github.com/libsdr-tlssr/libtiff> (or the official mirror at
+<https://gitlab.com/libtiff/libtiff>) and cross-compile a static
+`libtiff.a` with every codec except zlib turned off:
+
+```sh
+git clone https://gitlab.com/libtiff/libtiff
+cd libtiff
+
+cmake -B build-ios -G Xcode \
+  -DCMAKE_SYSTEM_NAME=iOS \
+  -DCMAKE_OSX_SYSROOT=iphoneos \
+  -DCMAKE_OSX_ARCHITECTURES=arm64 \
+  -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_SHARED_LIBS=OFF \
+  -Dtiff-static=ON \
+  -Dtiff-framework=OFF \
+  -Dtiff-tools=OFF \
+  -Dtiff-tests=OFF \
+  -Dtiff-contrib=OFF \
+  -Dtiff-docs=OFF \
+  -Dtiff-deprecated=OFF \
+  -Dtiff-cxx=OFF \
+  -Djpeg=OFF \
+  -Dold-jpeg=OFF \
+  -Djpeg12=OFF \
+  -Dzlib=ON \
+  -Dlzma=OFF \
+  -Dzstd=OFF \
+  -Dwebp=OFF \
+  -Djbig=OFF \
+  -Dlerc=OFF \
+  -Dtiff-opengl=OFF \
+  -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=NO \
+  -DCMAKE_INSTALL_PREFIX="$PWD/install-ios"
+
+cmake --build build-ios --config Release
+cmake --install build-ios --config Release
+```
+
+Then copy the result into `ios/deps`:
+
+```sh
+cp -r install-ios/include/*       <satdump>/ios/deps/include/
+cp install-ios/lib/libtiff.a      <satdump>/ios/deps/lib/
+```
+
+`libtiff.a` produced this way has no external dependencies beyond zlib
+(`libz.a`), which is provided through vcpkg below.
+
 ## The remaining libraries: vcpkg
 
 The other dependencies can come from vcpkg with the `arm64-ios` triplet:
@@ -104,18 +162,20 @@ The other dependencies can come from vcpkg with the `arm64-ios` triplet:
 git clone https://github.com/microsoft/vcpkg
 ./vcpkg/bootstrap-vcpkg.sh
 ./vcpkg/vcpkg install --triplet arm64-ios \
-    fftw3 libpng zlib nng curl zstd tiff
+    fftw3 libpng zlib nng curl zstd
 
 # Then merge the results into ios/deps:
 cp -r vcpkg/installed/arm64-ios/include/* ios/deps/include/
 cp -r vcpkg/installed/arm64-ios/lib/*     ios/deps/lib/
 ```
 
-Copying the whole `lib/` directory is fine — the iOS build links every
-`.a` in `ios/deps/lib`. The one exception is **libjpeg / libjpeg-turbo**
-(vcpkg pulls it in as a dependency of `tiff`): SatDump vendors its own
-libjpeg, so any external `libjpeg*.a` / `libturbojpeg*.a` is deliberately
-excluded from the link to avoid duplicate `jpeg12_*` symbols.
+> **Do not install `tiff` via vcpkg** — that build is wired up with libjpeg
+> support and breaks the link. Use the from-source recipe above instead.
+
+Copying the whole vcpkg `lib/` directory is otherwise fine — the iOS build
+links every `.a` in `ios/deps/lib`. As an extra safety net, any external
+`libjpeg*.a` / `libturbojpeg*.a` that somehow ends up in `ios/deps/lib` is
+filtered out at link time (SatDump bundles its own libjpeg).
 
 > Build all dependencies with the same `-DCMAKE_OSX_DEPLOYMENT_TARGET` as
 > the app (14.0). Otherwise the linker prints harmless "object file was
