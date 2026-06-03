@@ -84,14 +84,6 @@ plugin targets are built with optimized settings.
   server executable, which cannot live inside an iOS app bundle.
 * Local network access (for RTL-TCP / SpyServer servers on your LAN)
   triggers the iOS "Local Network" privacy prompt the first time it is used.
-* **App icon (AppIcon):** the iOS port ships an asset catalog at
-  `ios/Assets.xcassets/AppIcon.appiconset/` with a single 1024×1024
-  `AppIcon-1024.png`. Xcode's `actool` consumes it at build time
-  (`ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon`,
-  `CFBundleIconName=AppIcon`). To use your own icon, replace
-  `AppIcon-1024.png` with your own 1024×1024 RGB (no alpha) image.
-  SatDump's in-app branding (loading screen, About tab) still uses
-  `icon.png` inside the bundled `resources/` directory.
 * The bundled runtime data is staged inside the app bundle under
   `satdump_resources/` and `satdump_pipelines/`; a lowercase `resources/`
   folder at the bundle root collides with codesign's macOS-style
