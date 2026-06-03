@@ -15,6 +15,8 @@
 #include "loader/loader.h"
 #include "common/tracking/tle.h"
 
+void restore_security_scoped_bookmarks();
+
 // ----------------------------------------------------------------------------
 // Hidden UITextField subclass that drives the on-screen keyboard.
 //
@@ -76,6 +78,7 @@
 
     // --- Working directory (resources, config, output) ---
     [self setupWorkingDirectory];
+    restore_security_scoped_bookmarks();
 
     // --- Logger ---
     initLogger();

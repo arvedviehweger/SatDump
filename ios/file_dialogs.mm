@@ -1,5 +1,6 @@
 #import <UIKit/UIKit.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+#import <TargetConditionals.h>
 
 #include <mutex>
 #include <string>
@@ -18,28 +19,35 @@ NSMutableArray<NSURL *> *g_securityScopedURLs = nil;
 SatDumpDocumentPickerDelegate *g_filePickerDelegate = nil;
 SatDumpDocumentPickerDelegate *g_directoryPickerDelegate = nil;
 
-NSString *satdumpDocumentsDirectory()
+NSString *satdumpSecurityScopedBookmarksKey()
 {
-    return [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+    return @"SatDumpSecurityScopedBookmarks";
 }
 
-NSString *writableDirectoryPathForPickedURL(NSURL *url)
+void rememberSecurityScopedURL(NSURL *url)
 {
-    NSString *documents = satdumpDocumentsDirectory();
-    NSString *pickedPath = url.path;
-    if (documents == nil || pickedPath == nil)
-        return pickedPath;
+    if (url == nil || url.path == nil)
+        return;
 
-    if ([pickedPath hasPrefix:documents])
-        return pickedPath;
+    NSError *error = nil;
+    NSURLBookmarkCreationOptions options = 0;
+#if TARGET_OS_MACCATALYST
+    options = NSURLBookmarkCreationWithSecurityScope;
+#endif
 
-    NSString *localName = pickedPath.lastPathComponent.length > 0 ? pickedPath.lastPathComponent : @"SatDump";
-    NSString *localPath = [documents stringByAppendingPathComponent:localName];
-    [[NSFileManager defaultManager] createDirectoryAtPath:localPath
-                              withIntermediateDirectories:YES
-                                               attributes:nil
-                                                    error:nil];
-    return localPath;
+    NSData *bookmark = [url bookmarkDataWithOptions:options
+                     includingResourceValuesForKeys:nil
+                                      relativeToURL:nil
+                                              error:&error];
+    if (bookmark == nil)
+        return;
+
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+    NSDictionary *saved = [defaults dictionaryForKey:satdumpSecurityScopedBookmarksKey()];
+    NSMutableDictionary *bookmarks = saved != nil ? [saved mutableCopy] : [[NSMutableDictionary alloc] init];
+    bookmarks[url.path] = bookmark;
+    [defaults setObject:bookmarks forKey:satdumpSecurityScopedBookmarksKey()];
+    [defaults synchronize];
 }
 
 UIViewController *satdumpRootViewController()
@@ -97,8 +105,10 @@ void setDialogResult(bool directory, const std::string &result)
         g_securityScopedURLs = [[NSMutableArray alloc] init];
     [g_securityScopedURLs addObject:url];
 
-    NSString *path = self.directory == YES ? writableDirectoryPathForPickedURL(url) : url.path;
-    setDialogResult(self.directory == YES, path.UTF8String);
+    if (self.directory == YES)
+        rememberSecurityScopedURL(url);
+
+    setDialogResult(self.directory == YES, url.path.UTF8String);
 }
 
 - (void)documentPicker:(UIDocumentPickerViewController *)controller
@@ -188,4 +198,42 @@ void show_select_directory_dialog()
 std::string get_select_directory_dialog_result()
 {
     return takeDialogResult(true);
+}
+
+void restore_security_scoped_bookmarks()
+{
+    NSDictionary *bookmarks =
+        [NSUserDefaults.standardUserDefaults dictionaryForKey:satdumpSecurityScopedBookmarksKey()];
+    if (bookmarks.count == 0)
+        return;
+
+    if (g_securityScopedURLs == nil)
+        g_securityScopedURLs = [[NSMutableArray alloc] init];
+
+    for (NSString *path in bookmarks)
+    {
+        NSData *bookmark = bookmarks[path];
+        if (![bookmark isKindOfClass:NSData.class])
+            continue;
+
+        BOOL stale = NO;
+        NSError *error = nil;
+        NSURLBookmarkResolutionOptions options = 0;
+#if TARGET_OS_MACCATALYST
+        options = NSURLBookmarkResolutionWithSecurityScope;
+#endif
+        NSURL *url = [NSURL URLByResolvingBookmarkData:bookmark
+                                               options:options
+                                         relativeToURL:nil
+                                   bookmarkDataIsStale:&stale
+                                                 error:&error];
+        if (url == nil)
+            continue;
+
+        [url startAccessingSecurityScopedResource];
+        [g_securityScopedURLs addObject:url];
+
+        if (stale)
+            rememberSecurityScopedURL(url);
+    }
 }
