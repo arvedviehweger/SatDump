@@ -12,7 +12,7 @@ find_library(SDRPLAY_LIBRARY sdrplay_api)
 if(SDRPLAY_LIBRARY OR MSVC)
     message("Building with SDRPlay support")
     file(GLOB_RECURSE sdrplay_sdr_support_CPPS *.cpp)
-    add_library(sdrplay_sdr_support SHARED ${sdrplay_sdr_support_CPPS})
+    add_library(sdrplay_sdr_support ${SATDUMP_LIBRARY_TYPE} ${sdrplay_sdr_support_CPPS})
     target_include_directories(sdrplay_sdr_support PUBLIC src)
 
     if(MSVC)

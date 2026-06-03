@@ -11,7 +11,7 @@ else()
     file(GLOB sddc_sdr_support_CPPS main.cpp sddc_sdr.cpp lib/libsddc/*.c lib/libsddc/*.cpp lib/Core/*.c lib/Core/*.cpp lib/Core/radio/*.cpp lib/Core/pffft/*.c lib/Core/pffft/*.cpp lib/Core/arch/linux/*.c lib/Core/arch/linux/*.cpp)
 endif()
 
-add_library(sddc_sdr_support SHARED ${sddc_sdr_support_CPPS})
+add_library(sddc_sdr_support ${SATDUMP_LIBRARY_TYPE} ${sddc_sdr_support_CPPS})
 
 target_include_directories(sddc_sdr_support PRIVATE "lib/" "lib/Core/" "lib/Core/pffft/" "lib/libsddc/")
 

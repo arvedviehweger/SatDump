@@ -8,7 +8,7 @@ find_library(USB_LIBRARY usb-1.0)
 if(USB_LIBRARY OR MSVC OR ANDROID)
     message("Building with MiriSDR support")
     file(GLOB_RECURSE mirisdr_sdr_support_CPPS *.cpp mirisdr/libmirisdr.c)
-    add_library(mirisdr_sdr_support SHARED ${mirisdr_sdr_support_CPPS})
+    add_library(mirisdr_sdr_support ${SATDUMP_LIBRARY_TYPE} ${mirisdr_sdr_support_CPPS})
     target_include_directories(mirisdr_sdr_support PUBLIC src)
 
     if(MSVC)

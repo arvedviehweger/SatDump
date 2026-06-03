@@ -7,7 +7,7 @@ find_library(HACKRF_LIBRARY hackrf)
 if(HACKRF_LIBRARY OR MSVC OR ANDROID)
     message("Building with HackRF support")
     file(GLOB_RECURSE hackrf_sdr_support_CPPS *.cpp)
-    add_library(hackrf_sdr_support SHARED ${hackrf_sdr_support_CPPS})
+    add_library(hackrf_sdr_support ${SATDUMP_LIBRARY_TYPE} ${hackrf_sdr_support_CPPS})
     target_include_directories(hackrf_sdr_support PUBLIC src)
 
     if(MSVC)

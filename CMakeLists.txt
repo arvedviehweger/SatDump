@@ -58,6 +58,17 @@ if(SATDUMP_IOS)
     add_compile_definitions(SATDUMP_IOS=1)
 endif()
 
+# Library type used for satdump_core, satdump_interface and every plugin.
+# Shared everywhere by default, but static on iOS (no runtime dlopen).
+if(SATDUMP_IOS)
+    set(SATDUMP_LIBRARY_TYPE STATIC)
+
+    # Help find_package()/find_library() locate the prebuilt iOS dependencies.
+    list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_LIST_DIR}/ios/deps")
+else()
+    set(SATDUMP_LIBRARY_TYPE SHARED)
+endif()
+
 # Set default install prefix
 include(GNUInstallDirs) #Retruns good defaults on non-GNU systems as well
 if(UNIX)

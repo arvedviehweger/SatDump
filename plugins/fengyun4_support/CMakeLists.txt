@@ -3,7 +3,7 @@ project(fengyun4_support)
 
 
 file(GLOB_RECURSE fengyun4_support_CPPS *.cpp openjp2/*.c)
-add_library(fengyun4_support SHARED ${fengyun4_support_CPPS})
+add_library(fengyun4_support ${SATDUMP_LIBRARY_TYPE} ${fengyun4_support_CPPS})
 target_link_libraries(fengyun4_support PUBLIC satdump_core)
 target_include_directories(fengyun4_support PUBLIC src .)
 

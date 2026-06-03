@@ -6,7 +6,7 @@ find_library(PORTAUDIO_LIBRARY portaudio)
 if(PORTAUDIO_LIBRARY OR MSVC)
     message("Building with PortAudio sink")
     file(GLOB_RECURSE portaudio_audio_sink *.cpp)
-    add_library(portaudio_audio_sink SHARED ${portaudio_audio_sink})
+    add_library(portaudio_audio_sink ${SATDUMP_LIBRARY_TYPE} ${portaudio_audio_sink})
 
     if(MSVC)
         target_link_libraries(portaudio_audio_sink PUBLIC satdump_core portaudio.dll)

@@ -6,7 +6,7 @@ find_library(SOAPYSDR_LIBRARY SoapySDR)
 if(SOAPYSDR_LIBRARY)
     message("Building with SoapySDR support")
     file(GLOB_RECURSE soapy_sdr_support_CPPS *.cpp)
-    add_library(soapy_sdr_support SHARED ${soapy_sdr_support_CPPS})
+    add_library(soapy_sdr_support ${SATDUMP_LIBRARY_TYPE} ${soapy_sdr_support_CPPS})
     target_include_directories(soapy_sdr_support PUBLIC src)
 
     # if(MSVC)

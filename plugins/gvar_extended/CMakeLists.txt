@@ -3,7 +3,7 @@ project(gvar_extended)
 
 
 file(GLOB_RECURSE gvar_extended_CPPS *.cpp)
-add_library(gvar_extended SHARED ${gvar_extended_CPPS})
+add_library(gvar_extended ${SATDUMP_LIBRARY_TYPE} ${gvar_extended_CPPS})
 target_link_libraries(gvar_extended PUBLIC satdump_core)
 target_include_directories(gvar_extended PUBLIC src ../goes_support)
 

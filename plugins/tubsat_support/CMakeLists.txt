@@ -3,7 +3,7 @@ project(tubsat_support)
 
 
 file(GLOB_RECURSE tubsat_support_CPPS *.cpp)
-add_library(tubsat_support SHARED ${tubsat_support_CPPS})
+add_library(tubsat_support ${SATDUMP_LIBRARY_TYPE} ${tubsat_support_CPPS})
 target_link_libraries(tubsat_support PUBLIC satdump_core)
 target_include_directories(tubsat_support PUBLIC src)
 

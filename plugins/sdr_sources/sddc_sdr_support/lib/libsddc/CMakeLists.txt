@@ -6,7 +6,7 @@ endif (MSVC)
 
 include_directories("." "../Core")
 
-add_library(sddc SHARED
+add_library(sddc ${SATDUMP_LIBRARY_TYPE}
     libsddc.cpp
 )
 

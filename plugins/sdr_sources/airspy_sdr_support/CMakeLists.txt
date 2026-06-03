@@ -7,7 +7,7 @@ find_library(AIRSPY_LIBRARY airspy)
 if(AIRSPY_LIBRARY OR MSVC OR ANDROID)
     message("Building with Airspy support")
     file(GLOB_RECURSE airspy_sdr_support_CPPS *.cpp)
-    add_library(airspy_sdr_support SHARED ${airspy_sdr_support_CPPS})
+    add_library(airspy_sdr_support ${SATDUMP_LIBRARY_TYPE} ${airspy_sdr_support_CPPS})
     target_include_directories(airspy_sdr_support PUBLIC src)
 
     if(MSVC)

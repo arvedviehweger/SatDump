@@ -3,7 +3,7 @@ project(cpp_compos_support)
 
 
 file(GLOB_RECURSE cpp_compos_support_CPPS *.cpp)
-add_library(cpp_compos_support SHARED ${cpp_compos_support_CPPS})
+add_library(cpp_compos_support ${SATDUMP_LIBRARY_TYPE} ${cpp_compos_support_CPPS})
 target_link_libraries(cpp_compos_support PUBLIC satdump_core)
 target_include_directories(cpp_compos_support PUBLIC .)
 

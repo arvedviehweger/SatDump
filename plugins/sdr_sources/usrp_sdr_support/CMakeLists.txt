@@ -7,7 +7,7 @@ find_library(UHD_LIBRARY uhd)
 if(UHD_LIBRARY OR MSVC) # OR ANDROID)
     message("Building with USRP support")
     file(GLOB_RECURSE usrp_sdr_support_CPPS *.cpp)
-    add_library(usrp_sdr_support SHARED ${usrp_sdr_support_CPPS})
+    add_library(usrp_sdr_support ${SATDUMP_LIBRARY_TYPE} ${usrp_sdr_support_CPPS})
     target_include_directories(usrp_sdr_support PUBLIC src)
 
     if(MSVC)

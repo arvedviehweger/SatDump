@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 file(GLOB_RECURSE INTERFACE_CPPS *.cpp)
 
-add_library(satdump_interface SHARED ${INTERFACE_CPPS})
+add_library(satdump_interface ${SATDUMP_LIBRARY_TYPE} ${INTERFACE_CPPS})
 target_include_directories(satdump_interface PUBLIC . ../src-core)
 #set_target_properties(satdump_interface PROPERTIES COMPILE_DEFINITIONS BUILDER_STATIC_DEFINE)
 

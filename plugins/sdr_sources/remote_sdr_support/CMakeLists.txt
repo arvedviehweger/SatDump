@@ -5,7 +5,7 @@ message("Building with Remote Source support")
 
 # Plugin
 file(GLOB_RECURSE remote_sdr_support_CPPS plugin/*.cpp ../udp_discovery.cpp)
-add_library(remote_sdr_support SHARED ${remote_sdr_support_CPPS})
+add_library(remote_sdr_support ${SATDUMP_LIBRARY_TYPE} ${remote_sdr_support_CPPS})
 target_link_libraries(remote_sdr_support PUBLIC satdump_core)
 target_include_directories(remote_sdr_support PUBLIC plugin .)
 

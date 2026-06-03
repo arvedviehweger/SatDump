@@ -17,7 +17,7 @@ if(${HDF5_FOUND})
     nc2pro/*.cpp
     nat2pro/*.cpp)
 
-  add_library(official_products_support SHARED
+  add_library(official_products_support ${SATDUMP_LIBRARY_TYPE}
               ${official_products_support_CPPS})
   target_link_libraries(official_products_support PUBLIC satdump_core)
   target_include_directories(official_products_support PUBLIC src)
@@ -40,7 +40,7 @@ if(${HDF5_FOUND})
   # Loader plugin
   if(BUILD_GUI)
     file(GLOB_RECURSE loader_CPPS main_loader.cpp loader/*.cpp)
-    add_library(official_products_loader_support SHARED ${loader_CPPS})
+    add_library(official_products_loader_support ${SATDUMP_LIBRARY_TYPE} ${loader_CPPS})
     target_link_libraries(official_products_loader_support
                           PUBLIC official_products_support satdump_interface)
 

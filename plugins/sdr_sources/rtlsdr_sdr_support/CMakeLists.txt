@@ -7,7 +7,7 @@ find_library(RTLSDR_LIBRARY rtlsdr)
 if(RTLSDR_LIBRARY OR MSVC OR ANDROID)
     message("Building with RTL-SDR support")
     file(GLOB_RECURSE rtlsdr_sdr_support_CPPS *.cpp)
-    add_library(rtlsdr_sdr_support SHARED ${rtlsdr_sdr_support_CPPS})
+    add_library(rtlsdr_sdr_support ${SATDUMP_LIBRARY_TYPE} ${rtlsdr_sdr_support_CPPS})
     target_include_directories(rtlsdr_sdr_support PUBLIC src)
 
     if(MSVC)

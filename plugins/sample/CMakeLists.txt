@@ -3,7 +3,7 @@ project(sample)
 
 
 file(GLOB_RECURSE sample_CPPS *.cpp)
-add_library(sample SHARED ${sample_CPPS})
+add_library(sample ${SATDUMP_LIBRARY_TYPE} ${sample_CPPS})
 target_link_libraries(sample PUBLIC satdump_core)
 target_include_directories(sample PUBLIC src)
 

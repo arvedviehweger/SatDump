@@ -4,7 +4,7 @@ project(aaudio_audio_sink)
 if(ANDROID)
     message("Building with AAudio sink")
     file(GLOB_RECURSE aaudio_audio_sink *.cpp)
-    add_library(aaudio_audio_sink SHARED ${aaudio_audio_sink})
+    add_library(aaudio_audio_sink ${SATDUMP_LIBRARY_TYPE} ${aaudio_audio_sink})
 
     target_link_libraries(aaudio_audio_sink PUBLIC satdump_core aaudio)
 

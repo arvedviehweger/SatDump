@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 project(dvb_support)
 
 file(GLOB_RECURSE dvb_support_CPPS *.cpp)
-add_library(dvb_support SHARED ${dvb_support_CPPS})
+add_library(dvb_support ${SATDUMP_LIBRARY_TYPE} ${dvb_support_CPPS})
 target_link_libraries(dvb_support PUBLIC satdump_core)
 target_include_directories(dvb_support PUBLIC src .)
 

@@ -11,7 +11,7 @@ endif()
 if(UNIX OR MSVC)
     message("Building with Aaronia support")
     file(GLOB_RECURSE aaronia_sdr_support_CPPS *.cpp)
-    add_library(aaronia_sdr_support SHARED ${aaronia_sdr_support_CPPS})
+    add_library(aaronia_sdr_support ${SATDUMP_LIBRARY_TYPE} ${aaronia_sdr_support_CPPS})
 
     if(MSVC)
         target_link_directories(aaronia_sdr_support PUBLIC "${AARONIA_RTSA_SUITE_PATH}/sdk")

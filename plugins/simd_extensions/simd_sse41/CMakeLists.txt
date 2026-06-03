@@ -21,7 +21,7 @@ if(SSE41_FOUND)
     message("Found SSE41 features, enabling SSE41 plugin")
 
     file(GLOB_RECURSE simd_sse41_CPPS *.cpp)
-    add_library(simd_sse41 SHARED ${simd_sse41_CPPS})
+    add_library(simd_sse41 ${SATDUMP_LIBRARY_TYPE} ${simd_sse41_CPPS})
     target_link_libraries(simd_sse41 PUBLIC satdump_core)
     target_include_directories(simd_sse41 PUBLIC src)
 

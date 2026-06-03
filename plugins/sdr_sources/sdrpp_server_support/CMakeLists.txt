@@ -7,7 +7,7 @@ find_package(ZSTD)
 if(ZSTD_FOUND OR MSVC OR ANDROID)
     message("Building with SDR++ Server support")
     file(GLOB_RECURSE sdrpp_server_support_CPPS *.cpp)
-    add_library(sdrpp_server_support SHARED ${sdrpp_server_support_CPPS})
+    add_library(sdrpp_server_support ${SATDUMP_LIBRARY_TYPE} ${sdrpp_server_support_CPPS})
     target_link_libraries(sdrpp_server_support PUBLIC satdump_core)
     target_include_directories(sdrpp_server_support PUBLIC src)
 

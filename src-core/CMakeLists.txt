@@ -25,7 +25,7 @@ file(GLOB_RECURSE SatDump_core_CPPS *.cpp
 
 find_package(PkgConfig)
 
-add_library(satdump_core SHARED ${SatDump_core_CPPS})
+add_library(satdump_core ${SATDUMP_LIBRARY_TYPE} ${SatDump_core_CPPS})
 target_include_directories(satdump_core PUBLIC .)
 
 # Set the resources path
@@ -114,6 +114,40 @@ elseif(ANDROID)
     # Tiff
     target_link_libraries(satdump_core PUBLIC tiff)
 
+    target_include_directories(satdump_core PUBLIC libs/lua)
+elseif(SATDUMP_IOS)
+    # iOS: all third-party dependencies are prebuilt static libraries placed
+    # under ios/deps (see ios/README.md). Their location is added to the
+    # search paths via link_directories()/include_directories() in the
+    # top-level CMakeLists.txt.
+
+    # VOLK
+    target_link_libraries(satdump_core PUBLIC volk)
+    target_include_directories(satdump_core PUBLIC ../volk_includes)
+
+    # LibPNG + zlib
+    target_link_libraries(satdump_core PUBLIC png z)
+
+    # FFTW3 (single precision)
+    target_link_libraries(satdump_core PUBLIC fftw3f)
+
+    # NNG
+    target_link_libraries(satdump_core PUBLIC nng)
+
+    # cURL. On iOS curl uses Apple's Secure Transport / Network frameworks.
+    target_link_libraries(satdump_core PUBLIC curl
+        "-framework Security" "-framework CFNetwork" "-framework SystemConfiguration")
+
+    # Libzstd (ZIQ support)
+    if(BUILD_ZIQ)
+        target_link_libraries(satdump_core PUBLIC zstd)
+        target_compile_definitions(satdump_core PUBLIC BUILD_ZIQ="1")
+    endif()
+
+    # Tiff
+    target_link_libraries(satdump_core PUBLIC tiff)
+
+    # Lua
     target_include_directories(satdump_core PUBLIC libs/lua)
 else()
     if(NOT APPLE)

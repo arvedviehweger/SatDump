@@ -3,7 +3,7 @@ project(bluewalker3_support)
 
 
 file(GLOB_RECURSE bluewalker3_support_CPPS *.cpp)
-add_library(bluewalker3_support SHARED ${bluewalker3_support_CPPS})
+add_library(bluewalker3_support ${SATDUMP_LIBRARY_TYPE} ${bluewalker3_support_CPPS})
 target_link_libraries(bluewalker3_support PUBLIC satdump_core)
 target_include_directories(bluewalker3_support PUBLIC src)
 

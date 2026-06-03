@@ -9,7 +9,7 @@ find_library(USB_LIBRARY usb-1.0)
 if(USB_LIBRARY OR MSVC) #if(RFNM_LIBRARY) # OR MSVC
     message("Building with RFNM support")
     file(GLOB_RECURSE rfnm_sdr_support_CPPS *.cpp)
-    add_library(rfnm_sdr_support SHARED ${rfnm_sdr_support_CPPS})
+    add_library(rfnm_sdr_support ${SATDUMP_LIBRARY_TYPE} ${rfnm_sdr_support_CPPS})
     target_include_directories(rfnm_sdr_support PUBLIC src ${RFNM_INCLUDE_DIRS})
 
     if(MSVC)

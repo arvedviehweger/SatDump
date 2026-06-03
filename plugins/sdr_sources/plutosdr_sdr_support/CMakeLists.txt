@@ -8,7 +8,7 @@ find_library(AD9361_LIBRARY ad9361)
 if((IIO_LIBRARY AND AD9361_LIBRARY) OR MSVC OR ANDROID)
     message("Building with PlutoSDR support")
     file(GLOB_RECURSE plutosdr_sdr_support_CPPS *.cpp)
-    add_library(plutosdr_sdr_support SHARED ${plutosdr_sdr_support_CPPS})
+    add_library(plutosdr_sdr_support ${SATDUMP_LIBRARY_TYPE} ${plutosdr_sdr_support_CPPS})
     target_include_directories(plutosdr_sdr_support PUBLIC src)
 
     if(MSVC)

@@ -3,7 +3,7 @@ project(analog_support)
 
 
 file(GLOB_RECURSE analog_support_CPPS *.cpp)
-add_library(analog_support SHARED ${analog_support_CPPS})
+add_library(analog_support ${SATDUMP_LIBRARY_TYPE} ${analog_support_CPPS})
 target_link_libraries(analog_support PUBLIC satdump_core)
 target_include_directories(analog_support PUBLIC src)
 

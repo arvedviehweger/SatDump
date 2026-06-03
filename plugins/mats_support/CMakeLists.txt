@@ -3,7 +3,7 @@ project(mats_support)
 
 
 file(GLOB_RECURSE mats_support_CPPS *.cpp)
-add_library(mats_support SHARED ${mats_support_CPPS})
+add_library(mats_support ${SATDUMP_LIBRARY_TYPE} ${mats_support_CPPS})
 target_link_libraries(mats_support PUBLIC satdump_core)
 target_include_directories(mats_support PUBLIC src)
 

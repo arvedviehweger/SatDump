@@ -7,7 +7,7 @@ find_library(RTAUDIO_LIBRARY rtaudio)
 if(RTAUDIO_LIBRARY) # OR MSVC) # OR ANDROID)
     message("Building with RtAudio support")
     file(GLOB_RECURSE rtaudio_sdr_support_CPPS *.cpp)
-    add_library(rtaudio_sdr_support SHARED ${rtaudio_sdr_support_CPPS})
+    add_library(rtaudio_sdr_support ${SATDUMP_LIBRARY_TYPE} ${rtaudio_sdr_support_CPPS})
     target_include_directories(rtaudio_sdr_support PUBLIC src)
 
     if(MSVC)

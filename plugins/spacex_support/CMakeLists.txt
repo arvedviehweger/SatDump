@@ -5,7 +5,7 @@ project(spacex_support)
 option(USE_VIDEO_ENCODER "Build the video encoder module, links against libav." OFF)
 
 file(GLOB_RECURSE spacex_support_CPPS *.cpp)
-add_library(spacex_support SHARED ${spacex_support_CPPS})
+add_library(spacex_support ${SATDUMP_LIBRARY_TYPE} ${spacex_support_CPPS})
 target_link_libraries(spacex_support PUBLIC satdump_core)
 target_include_directories(spacex_support PUBLIC src)
 

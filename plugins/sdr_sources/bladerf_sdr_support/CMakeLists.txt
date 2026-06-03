@@ -7,7 +7,7 @@ find_library(BLADERF_LIBRARY bladeRF)
 if(BLADERF_LIBRARY OR MSVC) # OR ANDROID)
     message("Building with BladeRF support")
     file(GLOB_RECURSE bladerf_sdr_support_CPPS *.cpp)
-    add_library(bladerf_sdr_support SHARED ${bladerf_sdr_support_CPPS})
+    add_library(bladerf_sdr_support ${SATDUMP_LIBRARY_TYPE} ${bladerf_sdr_support_CPPS})
     target_include_directories(bladerf_sdr_support PUBLIC src)
 
     set(BLADERF_WIDEBAND_TEST_SOURCE

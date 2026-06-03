@@ -21,7 +21,7 @@ if(NEON_FOUND)
     message("Found NEON features, enabling NEON plugin")
 
     file(GLOB_RECURSE simd_neon_CPPS *.cpp)
-    add_library(simd_neon SHARED ${simd_neon_CPPS})
+    add_library(simd_neon ${SATDUMP_LIBRARY_TYPE} ${simd_neon_CPPS})
     target_link_libraries(simd_neon PUBLIC satdump_core)
     target_include_directories(simd_neon PUBLIC src)
 

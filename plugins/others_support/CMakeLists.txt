@@ -3,7 +3,7 @@ project(others_support)
 
 
 file(GLOB_RECURSE others_support_CPPS *.cpp)
-add_library(others_support SHARED ${others_support_CPPS})
+add_library(others_support ${SATDUMP_LIBRARY_TYPE} ${others_support_CPPS})
 target_link_libraries(others_support PUBLIC satdump_core)
 target_include_directories(others_support PUBLIC src)
 

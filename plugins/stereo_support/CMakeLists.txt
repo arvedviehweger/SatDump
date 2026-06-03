@@ -3,7 +3,7 @@ project(stereo_support)
 
 
 file(GLOB_RECURSE stereo_support_CPPS *.cpp)
-add_library(stereo_support SHARED ${stereo_support_CPPS})
+add_library(stereo_support ${SATDUMP_LIBRARY_TYPE} ${stereo_support_CPPS})
 target_link_libraries(stereo_support PUBLIC satdump_core)
 target_include_directories(stereo_support PUBLIC src)
 
