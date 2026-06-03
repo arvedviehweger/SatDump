@@ -132,7 +132,13 @@ void RtlSdrDextSource::stop()
 {
     if (is_started)
     {
-        // Tell the dext to stop producing first, then drain the reader.
+        // Disable bias-tee while the device is still fully active. Some dext
+        // implementations reject control transfers after StopStream has torn
+        // down the USB streaming state.
+        if (dext_connection != 0 && bias_enabled)
+            dext_call(dext_connection, kRTLSDRMethodSetBiasTee, 0, "SetBiasTee(off)");
+
+        // Tell the dext to stop producing, then drain the reader.
         if (dext_connection != 0)
             dext_call(dext_connection, kRTLSDRMethodStopStream, 0, "StopStream");
 
@@ -144,9 +150,6 @@ void RtlSdrDextSource::stop()
 
         if (dext_connection != 0)
         {
-            // Always leave the bias-tee off when we let go.
-            dext_call(dext_connection, kRTLSDRMethodSetBiasTee, 0, "SetBiasTee(off)");
-
             if (iq_ring != nullptr)
                 satdump_rtlsdr_dext_unmap_memory(dext_connection,
                                                  kRTLSDRMemoryTypeIQRing, iq_ring);
