@@ -74,13 +74,19 @@ or manually, from the repository root:
 cmake -B build-ios -G Xcode \
       -DCMAKE_SYSTEM_NAME=iOS \
       -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+      -DCMAKE_CONFIGURATION_TYPES=Release \
+      -DCMAKE_XCODE_GENERATE_SCHEME=ON \
+      -DCMAKE_XCODE_SCHEME_LAUNCH_CONFIGURATION=Release \
+      -DCMAKE_XCODE_SCHEME_PROFILE_CONFIGURATION=Release \
       -DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO
 ```
 
 ### 4. Build and run
 
 Open `build-ios/SatDump.xcodeproj` in Xcode, select the `SatDump` scheme and
-a device, set your signing team, then build and run.
+a device, set your signing team, then build and run. The generated project is
+Release-only so SatDump, `satdump_core`, `satdump_interface` and all static
+plugin targets are built with optimized settings.
 
 ## Notes / known limitations
 

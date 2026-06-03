@@ -21,8 +21,13 @@ cmake -S "${ROOT_DIR}" -B "${BUILD_DIR}" -G Xcode \
     -DCMAKE_OSX_SYSROOT=iphoneos \
     -DCMAKE_OSX_ARCHITECTURES=arm64 \
     -DCMAKE_OSX_DEPLOYMENT_TARGET="${DEPLOYMENT_TARGET}" \
+    -DCMAKE_CONFIGURATION_TYPES=Release \
+    -DCMAKE_XCODE_GENERATE_SCHEME=ON \
+    -DCMAKE_XCODE_SCHEME_LAUNCH_CONFIGURATION=Release \
+    -DCMAKE_XCODE_SCHEME_PROFILE_CONFIGURATION=Release \
     -DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO
 
 echo ""
 echo "Xcode project generated: ${BUILD_DIR}/SatDump.xcodeproj"
 echo "Open it in Xcode, set your signing team and build the SatDump scheme."
+echo "The generated project is Release-only so SatDump and all static targets use optimized builds."
