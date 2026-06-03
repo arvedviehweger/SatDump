@@ -16,6 +16,24 @@ namespace satdump
 {
     namespace config
     {
+        namespace
+        {
+#if defined(SATDUMP_IOS)
+            bool migrateIOSFileProviderDirectory(nlohmann::ordered_json &value, const std::string &documents_dir)
+            {
+                std::string path = value.get<std::string>();
+                if (path.find("/File Provider Storage/") == std::string::npos &&
+                    path.find("/Containers/Shared/AppGroup/") == std::string::npos)
+                    return false;
+
+                std::filesystem::path local_path = std::filesystem::path(documents_dir) / std::filesystem::path(path).filename();
+                std::filesystem::create_directories(local_path);
+                value = local_path.string();
+                return true;
+            }
+#endif
+        }
+
         nlohmann::ordered_json master_cfg;
         nlohmann::ordered_json main_cfg;
 
@@ -105,6 +123,20 @@ namespace satdump
                 bad_path = true;
                 config::main_cfg["satdump_directories"]["default_projection_output_directory"]["value"] = documents_dir;
             }
+#if defined(SATDUMP_IOS)
+            for (const std::string &key : {
+                     "recording_path",
+                     "live_processing_path",
+                     "default_input_directory",
+                     "default_output_directory",
+                     "default_image_output_directory",
+                     "default_projection_output_directory",
+                 })
+            {
+                if (config::main_cfg["satdump_directories"].contains(key))
+                    bad_path |= migrateIOSFileProviderDirectory(config::main_cfg["satdump_directories"][key]["value"], documents_dir);
+            }
+#endif
             if (bad_path)
                 saveUserConfig();
         }
