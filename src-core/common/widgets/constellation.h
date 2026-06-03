@@ -6,7 +6,13 @@
 
 namespace widgets
 {
+#ifndef CONST_SIZE
+#ifdef SATDUMP_IOS
+#define CONST_SIZE 512
+#else
 #define CONST_SIZE 2048
+#endif
+#endif
 
     class ConstellationViewer
     {
