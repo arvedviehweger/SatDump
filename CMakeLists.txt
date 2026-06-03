@@ -56,6 +56,10 @@ if(SATDUMP_IOS)
     set(BUILD_SHARED_LIBS OFF)
 
     add_compile_definitions(SATDUMP_IOS=1)
+
+    # Force-include the iOS compatibility header into every translation unit
+    # (fixes implicitly-declared C functions and neutralizes system()).
+    add_compile_options("SHELL:-include ${CMAKE_CURRENT_LIST_DIR}/ios/ios_compat.h")
 endif()
 
 # Library type used for satdump_core, satdump_interface and every plugin.
