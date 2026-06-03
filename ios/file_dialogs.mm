@@ -60,10 +60,8 @@ void setDialogResult(bool directory, const std::string &result)
 
 @implementation SatDumpDocumentPickerDelegate
 
-- (void)documentPicker:(UIDocumentPickerViewController *)controller
-    didPickDocumentsAtURLs:(NSArray<NSURL *> *)urls
+- (void)finishPickingURL:(NSURL *)url
 {
-    NSURL *url = urls.firstObject;
     if (url == nil || url.path == nil)
     {
         setDialogResult(self.directory == YES, "NO_PATH_SELECTED");
@@ -75,6 +73,18 @@ void setDialogResult(bool directory, const std::string &result)
         g_securityScopedURLs = [[NSMutableArray alloc] init];
     [g_securityScopedURLs addObject:url];
     setDialogResult(self.directory == YES, url.path.UTF8String);
+}
+
+- (void)documentPicker:(UIDocumentPickerViewController *)controller
+    didPickDocumentsAtURLs:(NSArray<NSURL *> *)urls
+{
+    [self finishPickingURL:urls.firstObject];
+}
+
+- (void)documentPicker:(UIDocumentPickerViewController *)controller
+      didPickDocumentAtURL:(NSURL *)url
+{
+    [self finishPickingURL:url];
 }
 
 - (void)documentPickerWasCancelled:(UIDocumentPickerViewController *)controller

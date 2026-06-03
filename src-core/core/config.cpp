@@ -41,7 +41,12 @@ namespace satdump
         void checkOutputDirs()
         {
             std::string documents_dir = "";
-#if defined(__APPLE__)
+#if defined(SATDUMP_IOS)
+            // The iOS frontend chdir()s into the app's Documents directory
+            // before SatDump initializes. Keep generated defaults inside that
+            // stable sandbox location instead of using macOS sysdir helpers.
+            documents_dir = std::filesystem::current_path().string();
+#elif defined(__APPLE__)
             // Always overwrite . on macOS since inside the app bundle can be writable
             char documents_glob[PATH_MAX];
             glob_t globbuf;
