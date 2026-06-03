@@ -45,6 +45,7 @@ set(SATDUMP_BUNDLE_FILES
     "${CMAKE_SOURCE_DIR}/satdump_cfg.json"
     "${SATDUMP_IOS_STAGED_DIR}/satdump_resources"
     "${SATDUMP_IOS_STAGED_DIR}/satdump_pipelines"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Assets.xcassets"
 )
 
 # The staged folders are produced by the PRE_BUILD step below, not present at
@@ -108,6 +109,11 @@ set_target_properties(SatDump PROPERTIES
     # normal signing flow.
     XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED[sdk=iphonesimulator*] "NO"
     XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY[sdk=iphonesimulator*] ""
+
+    # AppIcon - Xcode's actool consumes ios/Assets.xcassets/AppIcon.appiconset
+    # at build time and produces the platform-appropriate icon entries inside
+    # the app bundle. Info.plist has a matching CFBundleIconName=AppIcon.
+    XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
 )
 
 # ----------------------------------------------------------------------------

@@ -8,6 +8,8 @@
 	<string>SatDump</string>
 	<key>CFBundleExecutable</key>
 	<string>SatDump</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>org.satdump.SatDump</string>
 	<key>CFBundleInfoDictionaryVersion</key>
