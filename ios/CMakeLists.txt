@@ -66,6 +66,14 @@ set_target_properties(SatDump PROPERTIES
     XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES
     XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "org.satdump.SatDump"
     XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
+
+    # iOS Simulator does not require code signing. Disabling it for the
+    # Simulator SDK lets the build and the app be validated there without
+    # provisioning-profile setup, which is useful while debugging the
+    # device-signing pipeline. Real-device builds still go through the
+    # normal signing flow.
+    XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED[sdk=iphonesimulator*] "NO"
+    XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY[sdk=iphonesimulator*] ""
 )
 
 # ----------------------------------------------------------------------------
