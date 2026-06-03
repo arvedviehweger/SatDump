@@ -95,14 +95,19 @@ endif()
 if(SATDUMP_IOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
-    # iOS dependencies (volk, fftw3f, libpng, nng, ...) are cross-compiled
-    # ahead of time and placed under ios/deps. See ios/README.md for details.
+    # iOS dependencies (GNU Radio VOLK, fftw3f, libpng, nng, ...) are
+    # cross-compiled ahead of time and placed under ios/deps. See
+    # ios/README.md and ios/deps/README.md for details.
+    #
+    # The include/link directories are added unconditionally so that adding
+    # the prebuilt dependencies later does not require re-running CMake from
+    # scratch (a non-existent directory here is harmless to CMake).
     set(SATDUMP_IOS_DEPS "${CMAKE_CURRENT_LIST_DIR}/ios/deps")
-    if(EXISTS "${SATDUMP_IOS_DEPS}/lib")
-        link_directories("${SATDUMP_IOS_DEPS}/lib")
-        include_directories("${SATDUMP_IOS_DEPS}/include")
-    else()
-        message(WARNING "ios/deps not found - prebuilt iOS dependencies are required. See ios/README.md")
+    include_directories("${SATDUMP_IOS_DEPS}/include")
+    link_directories("${SATDUMP_IOS_DEPS}/lib")
+    if(NOT EXISTS "${SATDUMP_IOS_DEPS}/lib")
+        message(WARNING "ios/deps/lib not found - the prebuilt iOS dependencies "
+                        "must be present before building. See ios/deps/README.md")
     endif()
 endif()
 

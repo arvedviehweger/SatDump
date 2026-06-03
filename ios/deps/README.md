@@ -20,7 +20,7 @@ specific) — only this README is tracked.
 
 | Library  | Static lib            | Used for                              |
 |----------|-----------------------|---------------------------------------|
-| volk     | `libvolk.a`           | SIMD-accelerated DSP kernels          |
+| VOLK     | `libvolk.a`           | SIMD-accelerated DSP kernels          |
 | FFTW3    | `libfftw3f.a`         | FFTs (single precision)               |
 | libpng   | `libpng.a`            | PNG image I/O                         |
 | zlib     | `libz.a`              | Compression (used by libpng, etc.)    |
@@ -36,20 +36,66 @@ frameworks for it).
 If `zstd` is not provided, the build still works but ZIQ support and the
 SDR++ Server source plugin are disabled.
 
-## Recommended: build with vcpkg
+## VOLK — build it yourself (do NOT use vcpkg)
 
-SatDump already uses vcpkg for the macOS build (see `../../macOS`). The same
-approach works for iOS with the `arm64-ios` triplet:
+> **Important:** the `volk` package in vcpkg is the *Vulkan meta-loader*, a
+> completely different project. SatDump needs **GNU Radio VOLK** (the
+> "Vector-Optimized Library of Kernels"). It must be built from source.
+
+Clone <https://github.com/gnuradio/volk> and cross-compile the static
+library for iOS. VOLK's `lib/CMakeLists.txt` needs a small patch so it can
+produce a static archive for iOS (force static libs, drop `pthread`
+linkage, set a per-config archive output directory).
+
+```sh
+git clone --recursive https://github.com/gnuradio/volk
+cd volk
+
+cmake -B build-ios -G Xcode \
+  -DCMAKE_SYSTEM_NAME=iOS \
+  -DCMAKE_OSX_SYSROOT=iphoneos \
+  -DCMAKE_OSX_ARCHITECTURES=arm64 \
+  -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DENABLE_SHARED_LIBS=OFF \
+  -DENABLE_STATIC_LIBS=ON \
+  -DENABLE_TESTING=OFF \
+  -DENABLE_UTILITY_APPS=OFF \
+  -DENABLE_PROFILING=OFF \
+  -DENABLE_MODTOOL=OFF \
+  -DENABLE_ORC=OFF \
+  -DCMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED=NO \
+  -DCMAKE_INSTALL_PREFIX="$PWD/install-ios"
+
+cmake --build build-ios --config Release --target volk_static
+cmake --install build-ios --config Release
+```
+
+Then copy the result into `ios/deps`:
+
+```sh
+cp -r install-ios/include/volk   <satdump>/ios/deps/include/volk
+cp install-ios/lib/libvolk.a     <satdump>/ios/deps/lib/
+```
+
+VOLK's headers are generated at build time, so `volk/volk.h` only exists
+after a successful build/install — make sure `ios/deps/include/volk/volk.h`
+is present, otherwise `volk_includes/volk/volk_alloc.hh` will fail to
+compile.
+
+## The remaining libraries: vcpkg
+
+The other dependencies can come from vcpkg with the `arm64-ios` triplet:
 
 ```sh
 git clone https://github.com/microsoft/vcpkg
 ./vcpkg/bootstrap-vcpkg.sh
 ./vcpkg/vcpkg install --triplet arm64-ios \
-    volk fftw3 libpng zlib nng curl zstd tiff
+    fftw3 libpng zlib nng curl zstd tiff
 
-# Then copy the results into ios/deps:
-cp -r vcpkg/installed/arm64-ios/include ios/deps/include
-cp -r vcpkg/installed/arm64-ios/lib     ios/deps/lib
+# Then merge the results into ios/deps:
+cp -r vcpkg/installed/arm64-ios/include/* ios/deps/include/
+cp -r vcpkg/installed/arm64-ios/lib/*     ios/deps/lib/
 ```
 
 Alternatively each library can be cross-compiled manually with the iOS SDK

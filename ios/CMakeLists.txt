@@ -39,6 +39,13 @@ target_include_directories(SatDump PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/src-core
     ${CMAKE_SOURCE_DIR}/src-interface
+    ${CMAKE_SOURCE_DIR}/ios/deps/include
+)
+
+# Prebuilt iOS dependencies (also added globally in the top-level
+# CMakeLists.txt; repeated here so the application target links them directly).
+target_link_directories(SatDump PRIVATE
+    ${CMAKE_SOURCE_DIR}/ios/deps/lib
 )
 
 # Bundle the runtime data. It is added to the target so Xcode copies (and
