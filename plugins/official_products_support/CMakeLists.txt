@@ -3,7 +3,11 @@ project(official_products_support)
 
 find_package(PkgConfig)
 pkg_check_modules(HDF5 hdf5)
-if(${HDF5_FOUND})
+
+# This plugin depends entirely on HDF5. It is skipped on iOS, where HDF5 is
+# not provided (and pkg-config could otherwise pick up an incompatible host
+# build of the library).
+if(HDF5_FOUND AND NOT SATDUMP_IOS)
 
   # Core Plugin
   file(
