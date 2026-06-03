@@ -113,7 +113,7 @@ plugin targets are built with optimized settings.
 
 iOS has no libusb, so USB SDRs are not directly addressable. The iOS
 port instead talks to an **RTL-SDR USBDriverKit extension** that ships
-inside a separate carrier app (the *RTL-SDR Host* project). SatDump
+inside a separate carrier app (the [`RTL-SDR Host`](https://github.com/arvedviehweger/RTL-SDR-USB-iPadOS) project). SatDump
 opens an IOKit user client on that dext and reads IQ samples from a
 shared-memory ring buffer. See [`sdr/rtlsdr/README.md`](sdr/rtlsdr/README.md)
 for the full architecture, file layout and provisioning requirements.
