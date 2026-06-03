@@ -30,6 +30,34 @@ if(ANDROID)
     set(OPENCL_FOUND 1)
 endif()
 
+# iOS detection. When cross-compiling for iOS, CMake is invoked with
+# -DCMAKE_SYSTEM_NAME=iOS. We expose a single SATDUMP_IOS flag that the rest
+# of the build system uses to enable the iOS-specific code paths.
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    set(SATDUMP_IOS TRUE)
+endif()
+
+if(SATDUMP_IOS)
+    message("Configuring build for iOS")
+
+    # iOS is a sandboxed, restricted platform:
+    #  - No USB access, so all USB SDR sources are disabled (network SDRs only).
+    #  - No standalone CLI / desktop GUI executables.
+    #  - No OpenMP or OpenCL runtime.
+    #  - Everything is linked statically into a single application bundle.
+    set(BUILD_GUI ON)
+    set(BUILD_TESTING OFF)
+    set(BUILD_TOOLS OFF)
+    set(BUILD_OPENMP OFF)
+    set(BUILD_OPENCL OFF)
+    set(ENABLE_INSTALL OFF)
+
+    # All SatDump libraries and plugins are built as static archives on iOS.
+    set(BUILD_SHARED_LIBS OFF)
+
+    add_compile_definitions(SATDUMP_IOS=1)
+endif()
+
 # Set default install prefix
 include(GNUInstallDirs) #Retruns good defaults on non-GNU systems as well
 if(UNIX)
@@ -42,7 +70,7 @@ if(UNIX)
     endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 
-if(APPLE)
+if(APPLE AND NOT SATDUMP_IOS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
     link_directories(vcpkg/installed/osx-satdump/lib)
 
@@ -51,6 +79,20 @@ if(APPLE)
     include_directories(${JEMALLOC_INCLUDE_DIR})
     link_libraries(${JEMALLOC_LIBRARY})
 
+endif()
+
+if(SATDUMP_IOS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+
+    # iOS dependencies (volk, fftw3f, libpng, nng, ...) are cross-compiled
+    # ahead of time and placed under ios/deps. See ios/README.md for details.
+    set(SATDUMP_IOS_DEPS "${CMAKE_CURRENT_LIST_DIR}/ios/deps")
+    if(EXISTS "${SATDUMP_IOS_DEPS}/lib")
+        link_directories("${SATDUMP_IOS_DEPS}/lib")
+        include_directories("${SATDUMP_IOS_DEPS}/include")
+    else()
+        message(WARNING "ios/deps not found - prebuilt iOS dependencies are required. See ios/README.md")
+    endif()
 endif()
 
 if(UNIX)
@@ -151,7 +193,7 @@ if(ANDROID)
 endif()
 
 # Check we have OpenCL
-if(NOT ANDROID)
+if(NOT ANDROID AND NOT SATDUMP_IOS)
     find_package(OpenCL)
 endif()
 
@@ -193,13 +235,20 @@ if(NOT STD_HAS_FILESYSTEM)
 endif()
 
 add_subdirectory(src-core)
-add_subdirectory(src-cli)
+
+# The standalone CLI executable is not built on iOS (no command line / no
+# standalone binaries allowed inside an app bundle).
+if(NOT SATDUMP_IOS)
+    add_subdirectory(src-cli)
+endif()
 
 if(BUILD_GUI)
     message("Building the GUI")
     add_subdirectory(src-interface)
 
-    if(NOT ANDROID)
+    # The desktop GLFW/OpenGL UI is replaced by a dedicated Metal/UIKit
+    # frontend on iOS (see the ios/ directory).
+    if(NOT ANDROID AND NOT SATDUMP_IOS)
         add_subdirectory(src-ui)
     endif()
 endif()
@@ -213,6 +262,12 @@ if(BUILD_TOOLS)
 endif()
 
 add_subdirectory(plugins)
+
+# iOS application bundle. Added last so that satdump_core, satdump_interface
+# and all plugin targets are already defined and can be linked statically.
+if(SATDUMP_IOS)
+    add_subdirectory(ios)
+endif()
 
 # Install configuration
 if((NOT ANDROID) AND ENABLE_INSTALL)
