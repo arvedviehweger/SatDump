@@ -48,10 +48,16 @@ target_link_directories(SatDump PRIVATE
     ${CMAKE_SOURCE_DIR}/ios/deps/lib
 )
 
-# Bundle the runtime data. It is added to the target so Xcode copies (and
-# signs) it as part of the normal "Copy Bundle Resources" phase.
-set_source_files_properties(${SATDUMP_BUNDLE_FILES} PROPERTIES
-    MACOSX_PACKAGE_LOCATION "Resources")
+# Bundle the runtime data via the RESOURCE target property. This makes the
+# CMake Xcode generator place the files in Xcode's "Copy Bundle Resources"
+# build phase, so they are hashed into _CodeSignature/CodeResources as part
+# of the normal signing pipeline. The older approach of setting
+# MACOSX_PACKAGE_LOCATION on each source file produced a generic "Copy Files"
+# build phase that confused codesign with errors such as
+# "code object is not signed at all: In subcomponent ... satdump_cfg.json".
+set_target_properties(SatDump PROPERTIES
+    RESOURCE "${SATDUMP_BUNDLE_FILES}"
+)
 
 # Bundle metadata and Xcode settings.
 set_target_properties(SatDump PROPERTIES
