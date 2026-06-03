@@ -18,6 +18,30 @@ NSMutableArray<NSURL *> *g_securityScopedURLs = nil;
 SatDumpDocumentPickerDelegate *g_filePickerDelegate = nil;
 SatDumpDocumentPickerDelegate *g_directoryPickerDelegate = nil;
 
+NSString *satdumpDocumentsDirectory()
+{
+    return [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+}
+
+NSString *writableDirectoryPathForPickedURL(NSURL *url)
+{
+    NSString *documents = satdumpDocumentsDirectory();
+    NSString *pickedPath = url.path;
+    if (documents == nil || pickedPath == nil)
+        return pickedPath;
+
+    if ([pickedPath hasPrefix:documents])
+        return pickedPath;
+
+    NSString *localName = pickedPath.lastPathComponent.length > 0 ? pickedPath.lastPathComponent : @"SatDump";
+    NSString *localPath = [documents stringByAppendingPathComponent:localName];
+    [[NSFileManager defaultManager] createDirectoryAtPath:localPath
+                              withIntermediateDirectories:YES
+                                               attributes:nil
+                                                    error:nil];
+    return localPath;
+}
+
 UIViewController *satdumpRootViewController()
 {
     UIWindow *keyWindow = nil;
@@ -72,7 +96,9 @@ void setDialogResult(bool directory, const std::string &result)
     if (g_securityScopedURLs == nil)
         g_securityScopedURLs = [[NSMutableArray alloc] init];
     [g_securityScopedURLs addObject:url];
-    setDialogResult(self.directory == YES, url.path.UTF8String);
+
+    NSString *path = self.directory == YES ? writableDirectoryPathForPickedURL(url) : url.path;
+    setDialogResult(self.directory == YES, path.UTF8String);
 }
 
 - (void)documentPicker:(UIDocumentPickerViewController *)controller
